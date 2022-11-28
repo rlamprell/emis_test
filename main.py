@@ -20,6 +20,9 @@ class Extract:
         return self.files
 
 
+from    multiprocessing import Pool, freeze_support
+from    dataclasses import dataclass
+
 
 # transform the files
 class Transform:
@@ -27,30 +30,49 @@ class Transform:
         self.files = files
 
     def unpack(self):
-        # combined_df = pd.DataFrame()
         file_count  = len(self.files)
         list_of_dfs = [0]*file_count 
 
         for index, file in enumerate(self.files):
             data    = pd.read_json(file)
             df      = pd.json_normalize(data["entry"])
-            # print(list_of_dfs)
-            # print(index)?
             list_of_dfs[index] = df
 
         combined_df = pd.concat(list_of_dfs)
-        print(combined_df)
-            # combined_df = 
-            # combined_df = [combined_df, df]
-            # print(file)
-            # print(type(file))
-            # print(data)
-            # print(combined_df)
+        combined_df = combined_df.reset_index()
+
+        return combined_df
 
 
-        return 
+    def _file_unpacker(self, file):
+        # file_count  = len(self.files)
+        # list_of_dfs = [0]*file_count 
+
+        # for index, file in enumerate(self.files):
+        #     data    = pd.read_json(file)
+        #     df      = pd.json_normalize(data["entry"])
+        #     list_of_dfs[index] = df
+
+        # combined_df = pd.concat(list_of_dfs)
+        # combined_df = combined_df.reset_index()
+
+        data    = pd.read_json(file)
+        df      = pd.json_normalize(data["entry"])
+
+        # print(df)
+
+        return df
 
 
+    def unpack_map(self, workerCount=10):
+        with Pool(workerCount) as p:
+            # func, iter
+            dfs = p.map(self._file_unpacker, self.files)
+
+        dfs = pd.concat(list(dfs))
+        dfs = dfs.reset_index()
+
+        return dfs
 
 
 # load the files into a db
@@ -62,7 +84,11 @@ class Load:
 
 def main():
     raw_files       = Extract(files=1).getFiles()
-    unpacked_files  = Transform(raw_files).unpack()
+    # unpacked_files  = Transform(raw_files).unpack()
+
+    unpacked_files = Transform(raw_files).unpack_map()
+
+    print(unpacked_files)
 
 
 
