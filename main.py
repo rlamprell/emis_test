@@ -45,28 +45,14 @@ class Transform:
 
 
     def _file_unpacker(self, file):
-        # file_count  = len(self.files)
-        # list_of_dfs = [0]*file_count 
-
-        # for index, file in enumerate(self.files):
-        #     data    = pd.read_json(file)
-        #     df      = pd.json_normalize(data["entry"])
-        #     list_of_dfs[index] = df
-
-        # combined_df = pd.concat(list_of_dfs)
-        # combined_df = combined_df.reset_index()
-
         data    = pd.read_json(file)
         df      = pd.json_normalize(data["entry"])
-
-        # print(df)
 
         return df
 
 
     def unpack_map(self, workerCount=10):
         with Pool(workerCount) as p:
-            # func, iter
             dfs = p.map(self._file_unpacker, self.files)
 
         dfs = pd.concat(list(dfs))
