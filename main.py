@@ -27,14 +27,25 @@ class Transform:
         self.files = files
 
     def unpack(self):
+        # combined_df = pd.DataFrame()
+        file_count  = len(self.files)
+        list_of_dfs = [0]*file_count 
 
-        for file in self.files:
+        for index, file in enumerate(self.files):
             data    = pd.read_json(file)
             df      = pd.json_normalize(data["entry"])
+            # print(list_of_dfs)
+            # print(index)?
+            list_of_dfs[index] = df
 
-            print(file)
-            print(type(file))
-            print(data)
+        combined_df = pd.concat(list_of_dfs)
+        print(combined_df)
+            # combined_df = 
+            # combined_df = [combined_df, df]
+            # print(file)
+            # print(type(file))
+            # print(data)
+            # print(combined_df)
 
 
         return 
