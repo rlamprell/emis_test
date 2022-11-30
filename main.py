@@ -73,8 +73,9 @@ class Load:
         pass
 
 
+from abc import ABC
 
-class db_interface:
+class db_interface(ABC):
     def __init__(self):
         pass
 
@@ -94,18 +95,194 @@ class db_interface:
         pass
 
 
-class database:
-    def __init__(self):
+# class database:
+#     def __init__(self):
+#         pass
+
+#     def get():
+#         pass
+
+#     def post(db, table, data):
+#         import sqlalchemy as db
+#         from sqlalchemy import select
+#         from sqlalchemy.dialects import mysql
+
+#         # specify database configurations
+#         config = {
+#             'host': 'localhost',
+#             'port': 3306,
+#             'user': 'root',
+#             'password': 'mypassword',
+#             'database': 'emis_test'
+#         }
+#         db_user = config.get('user')
+#         db_pwd = config.get('password')
+#         db_host = config.get('host')
+#         db_port = config.get('port')
+#         db_name = config.get('database')
+#         # specify connection string
+#         connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+#         # connect to database
+#         engine = db.create_engine(connection_str)
+#         connection = engine.connect()
+#         # pull metadata of a table
+#         metadata = db.MetaData(bind=engine)
+#         metadata.reflect(only=[r'{table}'])
+
+#         # test_table = metadata.tables['table_name']
+#         test_table = metadata.tables[r'{table}']
+
+#         # print(type(test_table))
+#         stmt = select('*').select_from(test_table)
+#         # print(output)
+#         print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
+#         results = connection.execute(stmt).fetchall()
+#         print(results)
+
+#     def put():
+#         pass
+
+#     def patch():
+#         pass
+
+#     def delete():
+#         pass
+
+
+# class mySQL(database):
+class db_mySQL(db_interface):
+    def __init__(self, connection):
         pass
 
 
-class mySQL(database):
-    def __init__(self):
+from dataclasses import dataclass
+
+@dataclass
+class mySQL_connection_details:
+    config = {
+        'host': 'localhost',
+        'port': 3306,
+        'user': 'root',
+        'password': 'mypassword',
+        'database': 'emis_test'
+    }
+
+
+class db_connection:
+    def __init__(self, connection_details):
+        self.config = mySQL_connection_details()
+    
+    def _connectionString(self):
+        db_user = self.config.get('user')
+        db_pwd  = self.config.get('password')
+        db_host = self.config.get('host')
+        db_port = self.config.get('port')
+        db_name = self.config.get('database')
+        connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+
+    def executeOperation(self):
+        engine = db.create_engine(self.connection_str)
+        with engine.connect() as connection:
+            # pull metadata of a table
+            metadata = db.MetaData(bind=engine)
+            metadata.reflect(only=[f'{table}'])
+
+            # test_table = metadata.tables['table_name']
+            test_table = metadata.tables[f'{table}']
+
+            # print(type(test_table))
+            stmt = select('*').select_from(test_table)
+            # print(output)
+            print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
+            results = connection.execute(stmt).fetchall()
+            print(results)
+
+        return results
+
+
+    def openConnection(self):
+        engine = db.create_engine(connection_str)
+        connection = engine.connect()
+        
+        # engine = create_engine('...')
+        # with engine.connect() as conn:
+        #     conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS..."))
+        # engine.dispose()
+
+
+    def executeOperation(self):
+        pass
+
+    def closeConnection(self):
         pass
 
 
-class mySQL_connection():
-    def __init__(self):
+class mySQL_connection:
+    def __init__(self, connection_details):
+        pass
+
+    def get():
+        pass
+
+    def post(db, table, data):
+        import sqlalchemy as db
+        from sqlalchemy import select
+        from sqlalchemy.dialects import mysql
+
+        # specify database configurations
+        config = {
+            'host': 'localhost',
+            'port': 3306,
+            'user': 'root',
+            'password': 'mypassword',
+            'database': 'emis_test'
+        }
+        db_user = config.get('user')
+        db_pwd  = config.get('password')
+        db_host = config.get('host')
+        db_port = config.get('port')
+        db_name = config.get('database')
+        # specify connection string
+        connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+        # connect to database
+        engine = db.create_engine(connection_str)
+        with engine.connect() as connection:
+            # pull metadata of a table
+            metadata = db.MetaData(bind=engine)
+            metadata.reflect(only=[f'{table}'])
+
+            # test_table = metadata.tables['table_name']
+            test_table = metadata.tables[f'{table}']
+
+            # print(type(test_table))
+            stmt = select('*').select_from(test_table)
+            # print(output)
+            print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
+            results = connection.execute(stmt).fetchall()
+            print(results)
+        
+        # connection = engine.connect()
+        # # pull metadata of a table
+        # metadata = db.MetaData(bind=engine)
+        # metadata.reflect(only=[f'{table}'])
+
+        # # test_table = metadata.tables['table_name']
+        # test_table = metadata.tables[f'{table}']
+
+        # # print(type(test_table))
+        # stmt = select('*').select_from(test_table)
+        # # print(output)
+        # print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
+        # results = connection.execute(stmt).fetchall()
+        # print(results)
+
+    def put():
+        pass
+
+    def patch():
+        pass
+
+    def delete():
         pass
 
 
@@ -153,7 +330,9 @@ def main():
     # unpacked_files  = Transform(raw_files).unpack_by_map()
 
     # print(unpacked_files)
-    mySQL_connection().run()
+    # mySQL_connection().run()
+     mySQL_connection("conn").post("table_name", "data")
+
 
 
 if __name__ == '__main__':
