@@ -31,14 +31,15 @@ from    dataclasses import dataclass
 class Transform:
     __slots__ = ('files')
 
-    def __init__(self, files):
-        self.files = files
+    def __init__(self):#, files):
+        # self.files = files
+        pass
 
-    def unpack_by_loop(self):
-        file_count  = len(self.files)
+    def unpack_by_loop(self, files):
+        file_count  = len(files)
         list_of_dfs = [0]*file_count 
 
-        for index, file in enumerate(self.files):
+        for index, file in enumerate(files):
             data    = pd.read_json(file)
             df      = pd.json_normalize(data["entry"])
             list_of_dfs[index] = df
@@ -52,9 +53,9 @@ class Transform:
     # Might have trouble scaling this if:
     # -- the number of files is massive
     # -- the content of one or more files is massive
-    def unpack_by_map(self, workerCount=10):
+    def unpack_by_map(self, files, workerCount=10):
         with Pool(workerCount) as p:
-            dfs = p.map(self._file_unpacker, self.files)
+            dfs = p.map(self._file_unpacker, files)
 
         dfs = pd.concat(list(dfs))
         dfs = dfs.reset_index(drop=True)
@@ -68,6 +69,32 @@ class Transform:
 
         return df
         
+
+    def seperate_by_uniqueness(self, df, column):
+        unique_items    = df[column].unique()
+        unique_count    = len(unique_items)
+        df_list         = [0]*unique_count
+        row_count       = len(df.index)
+        incr_row_count  = 0
+
+        for index, item in enumerate(unique_items):
+            # df_list = df[['ItemId', 'ItemDescription']].drop_duplicates().set_index('ItemId')
+            item_filter     = df[column]==item
+            df_list[index]  = df.where(item_filter, inplace=False)
+            # print(df_list[index])
+            df_list[index]  = df_list[index].dropna(how='all')
+            print(df_list[index])
+            incr_row_count += len(df_list[index].index)
+        
+        print(row_count)
+        print(incr_row_count)
+        if row_count!=incr_row_count:
+            print("data integrity issue")
+
+        output_dict = dict(zip(unique_items, df_list))
+        print(output_dict)
+
+        return output_dict
 
 
 # load the files into a db
@@ -120,8 +147,9 @@ class mySQL_connection_details:
 
 
 import sqlalchemy as db
-from sqlalchemy import select
+from sqlalchemy import select, insert
 from sqlalchemy.dialects import mysql
+
 
 class db_connection:
     def __init__(self, connection_details):
@@ -140,14 +168,28 @@ class db_connection:
         return connection_str
 
 
-    def executeOperations(self, table):
+    def executeGet(self, table, columns="*"):
         engine = db.create_engine(self._connectionString)
         with engine.connect() as connection:
             metadata = db.MetaData(bind=engine)
             metadata.reflect(only=[f'{table}'])
 
             test_table  = metadata.tables[f'{table}']
-            stmt        = select('*').select_from(test_table)
+            stmt        = select(f"{columns}").select_from(test_table)
+            results     = connection.execute(stmt).fetchall()
+
+        return results
+
+    
+    def executePost(self, table):
+        engine = db.create_engine(self._connectionString)
+        with engine.connect() as connection:
+            metadata = db.MetaData(bind=engine)
+            metadata.reflect(only=[f'{table}'])
+
+            test_table  = metadata.tables[f'{table}']
+            # stmt        = select('*').select_from(test_table)
+            stmt        = db.insert()
             results     = connection.execute(stmt).fetchall()
 
         return results
@@ -161,7 +203,7 @@ class mySQL_connection:
     def get(self, table):
         conn_details    = mySQL_connection_details()
         db_conn         = db_connection(conn_details)
-        return db_conn.executeOperations(table)
+        return db_conn.executeGet(table)
 
     def post(db, table, data):
         pass
@@ -177,15 +219,25 @@ class mySQL_connection:
 
 
 def main():
-    # raw_files       = Extract(files=1).getFiles()
+    raw_files       = Extract(files=1).getFiles()
     # # unpacked_files  = Transform(raw_files).unpack_by_loop()
+
+    file_transformer    = Transform()
+    unpacked_files      = file_transformer.unpack_by_map(raw_files)
+
     # unpacked_files  = Transform(raw_files).unpack_by_map()
+    print(unpacked_files)
+    print(unpacked_files.columns.tolist())
+    print(unpacked_files['resource.resourceType'].unique())
+
+    seperated_files = file_transformer.seperate_by_uniqueness(unpacked_files, 'resource.resourceType')
 
     # print(unpacked_files)
+
     # mySQL_connection().run()
     #  mySQL_connection("conn").post("table_name", "data")
-    results = mySQL_connection("connection_details").get("table_name")
-    print(results)
+    # results = mySQL_connection("connection_details").get("table_name")
+    # print(results)
 
 
 if __name__ == '__main__':
