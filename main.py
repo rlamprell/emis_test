@@ -25,6 +25,8 @@ class Extract:
 
 from    multiprocessing import Pool, freeze_support
 from    dataclasses import dataclass
+from    functools import partial
+from    itertools import repeat
 
 
 # transform the files
@@ -70,7 +72,7 @@ class Transform:
         return df
         
 
-    def seperate_by_uniqueness(self, df, column):
+    def seperate_by_uniqueness_loop(self, df, column):
         unique_items    = df[column].unique()
         unique_count    = len(unique_items)
         df_list         = [0]*unique_count
@@ -83,6 +85,7 @@ class Transform:
             df_list[index]  = df.where(item_filter, inplace=False)
             # print(df_list[index])
             df_list[index]  = df_list[index].dropna(how='all')
+            df_list[index]  = df_list[index].dropna(axis=1)
             print(df_list[index])
             incr_row_count += len(df_list[index].index)
         
@@ -95,6 +98,57 @@ class Transform:
         print(output_dict)
 
         return output_dict
+
+
+
+    # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
+    def seperate_by_uniqueness_map(self, df, column, workerCount=10):
+        unique_items    = df[column].unique()
+        unique_count    = len(unique_items)
+        # df_list         = [0]*unique_count
+        row_count       = len(df.index)
+
+        with Pool(workerCount) as p:
+            output_dict = p.starmap(self._df_seperator, zip(unique_items, repeat(column), repeat(df)))
+
+        # NEED A DI CHECK HERE
+        
+        return output_dict
+
+    
+    def _df_seperator(self, item, column, df):
+        item_filter = df[column]==item
+        df          = df.where(item_filter, inplace=False)
+        df          = df.dropna(how='all')
+        df          = df.dropna(axis=1)
+
+        return df
+
+        # unique_items    = df[column].unique()
+        # unique_count    = len(unique_items)
+        # df_list         = [0]*unique_count
+        # row_count       = len(df.index)
+        # incr_row_count  = 0
+
+        # for index, item in enumerate(unique_items):
+        #     # df_list = df[['ItemId', 'ItemDescription']].drop_duplicates().set_index('ItemId')
+        #     item_filter     = df[column]==item
+        #     df_list[index]  = df.where(item_filter, inplace=False)
+        #     # print(df_list[index])
+        #     df_list[index]  = df_list[index].dropna(how='all')
+        #     df_list[index]  = df_list[index].dropna(axis=1)
+        #     print(df_list[index])
+        #     incr_row_count += len(df_list[index].index)
+        
+        # print(row_count)
+        # print(incr_row_count)
+        # if row_count!=incr_row_count:
+        #     print("data integrity issue")
+
+        # output_dict = dict(zip(unique_items, df_list))
+        # print(output_dict)
+
+        
 
 
 # load the files into a db
@@ -230,7 +284,10 @@ def main():
     print(unpacked_files.columns.tolist())
     print(unpacked_files['resource.resourceType'].unique())
 
-    seperated_files = file_transformer.seperate_by_uniqueness(unpacked_files, 'resource.resourceType')
+    # seperated_files = file_transformer.seperate_by_uniqueness_loop(unpacked_files, 'resource.resourceType')
+
+    seperated_files = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
+    print(seperated_files)
 
     # print(unpacked_files)
 
