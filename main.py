@@ -49,6 +49,9 @@ class Transform:
         return combined_df
 
 
+    # Might have trouble scaling this if:
+    # -- the number of files is massive
+    # -- the content of one or more files is massive
     def unpack_by_map(self, workerCount=10):
         with Pool(workerCount) as p:
             dfs = p.map(self._file_unpacker, self.files)
@@ -107,12 +110,12 @@ from dataclasses import dataclass
 @dataclass
 class mySQL_connection_details:
     config = {
-        'container': 'mysql',
-        'host': 'localhost',
-        'port': 3306,
-        'user': 'root',
-        'password': 'mypassword',
-        'database': 'emis_test'
+        'container':    'mysql',
+        'host':         'localhost',
+        'port':         3306,
+        'user':         'root',
+        'password':     'mypassword',
+        'database':     'emis_test'
     }
 
 
@@ -160,60 +163,8 @@ class mySQL_connection:
         db_conn         = db_connection(conn_details)
         return db_conn.executeOperations(table)
 
-
-
     def post(db, table, data):
         pass
-        # import sqlalchemy as db
-        # from sqlalchemy import select
-        # from sqlalchemy.dialects import mysql
-
-        # # specify database configurations
-        # config = {
-        #     'host': 'localhost',
-        #     'port': 3306,
-        #     'user': 'root',
-        #     'password': 'mypassword',
-        #     'database': 'emis_test'
-        # }
-        # db_user = config.get('user')
-        # db_pwd  = config.get('password')
-        # db_host = config.get('host')
-        # db_port = config.get('port')
-        # db_name = config.get('database')
-        # # specify connection string
-        # connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
-        # # connect to database
-        # engine = db.create_engine(connection_str)
-        # with engine.connect() as connection:
-        #     # pull metadata of a table
-        #     metadata = db.MetaData(bind=engine)
-        #     metadata.reflect(only=[f'{table}'])
-
-        #     # test_table = metadata.tables['table_name']
-        #     test_table = metadata.tables[f'{table}']
-
-        #     # print(type(test_table))
-        #     stmt = select('*').select_from(test_table)
-        #     # print(output)
-        #     print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
-        #     results = connection.execute(stmt).fetchall()
-        #     print(results)
-        
-        # connection = engine.connect()
-        # # pull metadata of a table
-        # metadata = db.MetaData(bind=engine)
-        # metadata.reflect(only=[f'{table}'])
-
-        # # test_table = metadata.tables['table_name']
-        # test_table = metadata.tables[f'{table}']
-
-        # # print(type(test_table))
-        # stmt = select('*').select_from(test_table)
-        # # print(output)
-        # print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
-        # results = connection.execute(stmt).fetchall()
-        # print(results)
 
     def put():
         pass
@@ -223,44 +174,6 @@ class mySQL_connection:
 
     def delete():
         pass
-
-
-    def run(self):
-        import sqlalchemy as db
-        from sqlalchemy import select
-        from sqlalchemy.dialects import mysql
-
-        # specify database configurations
-        config = {
-            'host': 'localhost',
-            'port': 3306,
-            'user': 'root',
-            'password': 'mypassword',
-            'database': 'emis_test'
-        }
-        db_user = config.get('user')
-        db_pwd = config.get('password')
-        db_host = config.get('host')
-        db_port = config.get('port')
-        db_name = config.get('database')
-        # specify connection string
-        connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
-        # connect to database
-        engine = db.create_engine(connection_str)
-        connection = engine.connect()
-        # pull metadata of a table
-        metadata = db.MetaData(bind=engine)
-        metadata.reflect(only=['table_name'])
-
-        test_table = metadata.tables['table_name']
-        print(type(test_table))
-        stmt = select('*').select_from(test_table)
-        # print(output)
-        print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
-        results = connection.execute(stmt).fetchall()
-        print(results)
-        # stmt = select('*').select_from(test_table)
-        # result = session.execute(stmt).fetchall()
 
 
 def main():
