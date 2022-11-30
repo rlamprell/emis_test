@@ -95,60 +95,6 @@ class db_interface(ABC):
         pass
 
 
-# class database:
-#     def __init__(self):
-#         pass
-
-#     def get():
-#         pass
-
-#     def post(db, table, data):
-#         import sqlalchemy as db
-#         from sqlalchemy import select
-#         from sqlalchemy.dialects import mysql
-
-#         # specify database configurations
-#         config = {
-#             'host': 'localhost',
-#             'port': 3306,
-#             'user': 'root',
-#             'password': 'mypassword',
-#             'database': 'emis_test'
-#         }
-#         db_user = config.get('user')
-#         db_pwd = config.get('password')
-#         db_host = config.get('host')
-#         db_port = config.get('port')
-#         db_name = config.get('database')
-#         # specify connection string
-#         connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
-#         # connect to database
-#         engine = db.create_engine(connection_str)
-#         connection = engine.connect()
-#         # pull metadata of a table
-#         metadata = db.MetaData(bind=engine)
-#         metadata.reflect(only=[r'{table}'])
-
-#         # test_table = metadata.tables['table_name']
-#         test_table = metadata.tables[r'{table}']
-
-#         # print(type(test_table))
-#         stmt = select('*').select_from(test_table)
-#         # print(output)
-#         print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
-#         results = connection.execute(stmt).fetchall()
-#         print(results)
-
-#     def put():
-#         pass
-
-#     def patch():
-#         pass
-
-#     def delete():
-#         pass
-
-
 # class mySQL(database):
 class db_mySQL(db_interface):
     def __init__(self, connection):
@@ -157,9 +103,11 @@ class db_mySQL(db_interface):
 
 from dataclasses import dataclass
 
+# This should really be in a secrets manager or something to keep it secure
 @dataclass
 class mySQL_connection_details:
     config = {
+        'container': 'mysql',
         'host': 'localhost',
         'port': 3306,
         'user': 'root',
@@ -168,98 +116,89 @@ class mySQL_connection_details:
     }
 
 
+import sqlalchemy as db
+from sqlalchemy import select
+from sqlalchemy.dialects import mysql
+
 class db_connection:
     def __init__(self, connection_details):
-        self.config = mySQL_connection_details()
+        self.config             = mySQL_connection_details().config
+        self._connectionString  = self._connectionString()
     
-    def _connectionString(self):
-        db_user = self.config.get('user')
-        db_pwd  = self.config.get('password')
-        db_host = self.config.get('host')
-        db_port = self.config.get('port')
-        db_name = self.config.get('database')
-        connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
 
-    def executeOperation(self):
-        engine = db.create_engine(self.connection_str)
+    def _connectionString(self):
+        db_container    = self.config.get('container')
+        db_user         = self.config.get('user')
+        db_pwd          = self.config.get('password')
+        db_host         = self.config.get('host')
+        db_port         = self.config.get('port')
+        db_name         = self.config.get('database')
+        connection_str  = f'{db_container}+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+        return connection_str
+
+
+    def executeOperations(self, table):
+        engine = db.create_engine(self._connectionString)
         with engine.connect() as connection:
-            # pull metadata of a table
             metadata = db.MetaData(bind=engine)
             metadata.reflect(only=[f'{table}'])
 
-            # test_table = metadata.tables['table_name']
-            test_table = metadata.tables[f'{table}']
-
-            # print(type(test_table))
-            stmt = select('*').select_from(test_table)
-            # print(output)
-            print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
-            results = connection.execute(stmt).fetchall()
-            print(results)
+            test_table  = metadata.tables[f'{table}']
+            stmt        = select('*').select_from(test_table)
+            results     = connection.execute(stmt).fetchall()
 
         return results
 
-
-    def openConnection(self):
-        engine = db.create_engine(connection_str)
-        connection = engine.connect()
-        
-        # engine = create_engine('...')
-        # with engine.connect() as conn:
-        #     conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS..."))
-        # engine.dispose()
-
-
-    def executeOperation(self):
-        pass
-
-    def closeConnection(self):
-        pass
 
 
 class mySQL_connection:
     def __init__(self, connection_details):
         pass
 
-    def get():
-        pass
+    def get(self, table):
+        conn_details    = mySQL_connection_details()
+        db_conn         = db_connection(conn_details)
+        return db_conn.executeOperations(table)
+
+
 
     def post(db, table, data):
-        import sqlalchemy as db
-        from sqlalchemy import select
-        from sqlalchemy.dialects import mysql
+        pass
+        # import sqlalchemy as db
+        # from sqlalchemy import select
+        # from sqlalchemy.dialects import mysql
 
-        # specify database configurations
-        config = {
-            'host': 'localhost',
-            'port': 3306,
-            'user': 'root',
-            'password': 'mypassword',
-            'database': 'emis_test'
-        }
-        db_user = config.get('user')
-        db_pwd  = config.get('password')
-        db_host = config.get('host')
-        db_port = config.get('port')
-        db_name = config.get('database')
-        # specify connection string
-        connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
-        # connect to database
-        engine = db.create_engine(connection_str)
-        with engine.connect() as connection:
-            # pull metadata of a table
-            metadata = db.MetaData(bind=engine)
-            metadata.reflect(only=[f'{table}'])
+        # # specify database configurations
+        # config = {
+        #     'host': 'localhost',
+        #     'port': 3306,
+        #     'user': 'root',
+        #     'password': 'mypassword',
+        #     'database': 'emis_test'
+        # }
+        # db_user = config.get('user')
+        # db_pwd  = config.get('password')
+        # db_host = config.get('host')
+        # db_port = config.get('port')
+        # db_name = config.get('database')
+        # # specify connection string
+        # connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+        # # connect to database
+        # engine = db.create_engine(connection_str)
+        # with engine.connect() as connection:
+        #     # pull metadata of a table
+        #     metadata = db.MetaData(bind=engine)
+        #     metadata.reflect(only=[f'{table}'])
 
-            # test_table = metadata.tables['table_name']
-            test_table = metadata.tables[f'{table}']
+        #     # test_table = metadata.tables['table_name']
+        #     test_table = metadata.tables[f'{table}']
 
-            # print(type(test_table))
-            stmt = select('*').select_from(test_table)
-            # print(output)
-            print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
-            results = connection.execute(stmt).fetchall()
-            print(results)
+        #     # print(type(test_table))
+        #     stmt = select('*').select_from(test_table)
+        #     # print(output)
+        #     print(stmt.compile(dialect=mysql.dialect(),compile_kwargs={"literal_binds": True}))
+        #     results = connection.execute(stmt).fetchall()
+        #     print(results)
         
         # connection = engine.connect()
         # # pull metadata of a table
@@ -331,8 +270,9 @@ def main():
 
     # print(unpacked_files)
     # mySQL_connection().run()
-     mySQL_connection("conn").post("table_name", "data")
-
+    #  mySQL_connection("conn").post("table_name", "data")
+    results = mySQL_connection("connection_details").get("table_name")
+    print(results)
 
 
 if __name__ == '__main__':
