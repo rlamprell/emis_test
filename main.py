@@ -29,6 +29,38 @@ from    functools import partial
 from    itertools import repeat
 
 
+# from flatten_json import flatten_json
+# amended from PyPi flatten_json
+from flatten_json_copy import flatten_json
+# def flatten_json(nested_json, exclude=['']):
+#     """Flatten json object with nested keys into a single level.
+#         Args:
+#             nested_json: A nested json object.
+#             exclude: Keys to exclude from output.
+#         Returns:
+#             The flattened json object if successful, None otherwise.
+#     """
+#     out = {}
+
+#     def flatten(x, name='', exclude=exclude):
+#         if type(x) is dict:
+#             for a in x:
+#                 if a not in exclude: flatten(x[a], name + a + '_')
+#                 # if a not in exclude: flatten(x[a], name + a + '_')
+#         elif type(x) is list:
+#             i = 0
+#             for a in x:
+#                 flatten(a, name + str(i) + '_')
+#                 # flatten(a, name + '_')
+#                 i += 1
+#         else:
+#             out[name[:-1]] = x
+
+#     flatten(nested_json)
+#     return out
+
+
+
 # transform the files
 class Transform:
     __slots__ = ('files')
@@ -43,7 +75,7 @@ class Transform:
 
         for index, file in enumerate(files):
             data    = pd.read_json(file)
-            df      = pd.json_normalize(data["entry"])
+            df      = pd.json_normalize(data["entry"], max_level=20)
             list_of_dfs[index] = df
 
         combined_df = pd.concat(list_of_dfs)
@@ -67,7 +99,9 @@ class Transform:
 
     def _file_unpacker(self, file):
         data    = pd.read_json(file)
-        df      = pd.json_normalize(data["entry"])
+        df      = pd.json_normalize(data["entry"], max_level=20)
+        # df = pd.DataFrame([flatten_json(x) for x in data["entry"]])
+        # flatten_json.flatten_json()
 
         return df
         
@@ -102,16 +136,18 @@ class Transform:
 
 
     # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
-    def seperate_by_uniqueness_map(self, df, column, workerCount=10):
+    def seperate_by_uniqueness_map(self, df, column, workerCount=20):
         unique_items    = df[column].unique()
         unique_count    = len(unique_items)
         # df_list         = [0]*unique_count
         row_count       = len(df.index)
 
         with Pool(workerCount) as p:
-            output_dict = p.starmap(self._df_seperator, zip(unique_items, repeat(column), repeat(df)))
+            df_list = p.starmap(self._df_seperator, zip(unique_items, repeat(column), repeat(df)))
 
         # NEED A DI CHECK HERE
+
+        output_dict = dict(zip(unique_items, df_list))
         
         return output_dict
 
@@ -121,34 +157,21 @@ class Transform:
         df          = df.where(item_filter, inplace=False)
         df          = df.dropna(how='all')
         df          = df.dropna(axis=1)
+        # df          = self._flatten_df(df)
 
         return df
 
-        # unique_items    = df[column].unique()
-        # unique_count    = len(unique_items)
-        # df_list         = [0]*unique_count
-        # row_count       = len(df.index)
-        # incr_row_count  = 0
 
-        # for index, item in enumerate(unique_items):
-        #     # df_list = df[['ItemId', 'ItemDescription']].drop_duplicates().set_index('ItemId')
-        #     item_filter     = df[column]==item
-        #     df_list[index]  = df.where(item_filter, inplace=False)
-        #     # print(df_list[index])
-        #     df_list[index]  = df_list[index].dropna(how='all')
-        #     df_list[index]  = df_list[index].dropna(axis=1)
-        #     print(df_list[index])
-        #     incr_row_count += len(df_list[index].index)
-        
-        # print(row_count)
-        # print(incr_row_count)
-        # if row_count!=incr_row_count:
-        #     print("data integrity issue")
+    # it's dumb that we go json->df->json->df
+    def flatten_df(self, df):
+        data = df.to_dict('records')
+        print(f"mydata: {data}")
+        # df = pd.DataFrame([flatten_json(data)])    
 
-        # output_dict = dict(zip(unique_items, df_list))
-        # print(output_dict)
-
-        
+        df = pd.DataFrame([flatten_json(x) for x in data])
+        # df = pd.DataFrame([flatten_json(data[key]) for key in data])
+        return df
+        # return     
 
 
 # load the files into a db
@@ -235,32 +258,63 @@ class db_connection:
         return results
 
     
-    def executePost(self, table):
+    def executePost(self, table_name, df):
+        engine = db.create_engine(self._connectionString)
+        print(f"df: {type(df)}")
+        print(type(table_name))
+        with engine.connect() as connection:
+            df.to_sql(table_name, connection, if_exists='replace', index=False)#, dtype='dict')
+
+            # metadata = db.MetaData(bind=engine)
+            # metadata.reflect(only=[f'{table}'])
+
+            # test_table  = metadata.tables[f'{table}']
+            # # stmt        = select('*').select_from(test_table)
+            # stmt        = 
+            # results     = connection.execute(stmt).fetchall()
+
+        # return results
+
+
+    def createTable(self, table_name):
         engine = db.create_engine(self._connectionString)
         with engine.connect() as connection:
-            metadata = db.MetaData(bind=engine)
-            metadata.reflect(only=[f'{table}'])
+            pass
 
-            test_table  = metadata.tables[f'{table}']
-            # stmt        = select('*').select_from(test_table)
-            stmt        = db.insert()
-            results     = connection.execute(stmt).fetchall()
+
+            # meta_data = {}
+            # this_table = db.Table(
+            #     "this_table",
+            #     meta_data,
+
+            # )
+
+            # metadata = db.MetaData(bind=engine)
+            # metadata.reflect(only=[f'{table}'])
+
+            # test_table  = metadata.tables[f'{table}']
+            # # stmt        = select('*').select_from(test_table)
+            # stmt        = db.insert()
+            # results     = connection.execute(stmt).fetchall()
 
         return results
 
 
-
+# NO DEFENSE AGAINST SHADOW READS AND CONCURENCY ISSUES
 class mySQL_connection:
     def __init__(self, connection_details):
-        pass
+        self.connection_details = connection_details
 
     def get(self, table):
         conn_details    = mySQL_connection_details()
         db_conn         = db_connection(conn_details)
         return db_conn.executeGet(table)
 
-    def post(db, table, data):
-        pass
+    def post(self, table, data):
+        conn_details    = mySQL_connection_details()
+        db_conn         = db_connection(conn_details)
+        db_conn.executePost(table, data)
+        # return db_conn.executeGet(table)
 
     def put():
         pass
@@ -288,6 +342,49 @@ def main():
 
     seperated_files = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
     print(seperated_files)
+    print(seperated_files['Patient'].info(verbose=True))
+    print(seperated_files['Patient'].convert_dtypes().dtypes)
+    seperated_files['Patient'] = seperated_files['Patient'].convert_dtypes()
+    print(seperated_files['Patient'].info(verbose=True))
+
+    seperated_files['Patient']["fullUrl"] = seperated_files['Patient']["fullUrl"].str.replace("[urn::uuid:]", "")
+    print(seperated_files['Patient'])
+# resource.extension
+    print(seperated_files['Patient']['resource.extension'])
+
+    # unpack      = pd.json_normalize(seperated_files['Patient']['resource.extension'], max_level=20)
+    seperated_files['Patient'] = seperated_files['Patient'].explode('resource.extension')
+    # print(unpack)
+    print(seperated_files['Patient'])
+    # df["A"].str.replace("[ab]","")
+    # for df in seperated_files:
+    #     print(df.columns.tolist())
+
+
+    # Idx=df.set_index(['COL1','COL2']).COL3.apply(pd.Series).stack().index
+
+    # pd.DataFrame(df.set_index(['COL1','COL2']).COL3.apply(pd.Series).stack().values.tolist(),index=Idx).reset_index().drop('level_2',1)
+
+
+    seperated_files['Patient'] = pd.DataFrame([x for x in seperated_files['Patient']['resource.extension']])
+    print(seperated_files['Patient'])
+
+
+    # print(seperated_files[0].columns.tolist())
+    print(unpacked_files['resource.resourceType'].unique()[0])
+    print(seperated_files['Patient'].to_string())
+
+
+    seperated_files['Patient'] = file_transformer.flatten_df(seperated_files['Patient'])
+
+    print(f"\n\n\n\n\n\n\n\n")
+    print("new output")
+    print(seperated_files['Patient'])
+    print(f"\n\n\n\n\n\n\n\n")
+
+
+
+    mySQL_connection("conn").post(unpacked_files['resource.resourceType'].unique()[0], seperated_files['Patient'])
 
     # print(unpacked_files)
 
