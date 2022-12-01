@@ -326,19 +326,34 @@ class mySQL_connection:
         pass
 
 
+# NOT SURE IF I NEED THIS OR IF SQLALCH IS SMART ENOUGH TO DO IT ON ITS OWN
+# add in any missing columns as blank
+def match_target_table_formatting():
+    pass
+
+def auto_convert_types(df):
+    pass
+
+
 def main():
-    raw_files       = Extract(files=1).getFiles()
+    raw_files           = Extract(files=1).getFiles()
     # # unpacked_files  = Transform(raw_files).unpack_by_loop()
 
     file_transformer    = Transform()
     unpacked_files      = file_transformer.unpack_by_map(raw_files)
+    seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
 
-    seperated_files = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
-    seperated_files['Patient'] = seperated_files['Patient'].convert_dtypes()
-    seperated_files['Patient'] = seperated_files['Patient'].explode('resource.extension')
-    seperated_files['Patient'] = file_transformer.flatten_df(seperated_files['Patient'])
+    for df in seperated_files:
+        seperated_files[df] = seperated_files[df].convert_dtypes()
+        seperated_files[df] = file_transformer.flatten_df(seperated_files[df])
+        mySQL_connection("conn").post(df, seperated_files[df])
 
-    mySQL_connection("conn").post(unpacked_files['resource.resourceType'].unique()[0], seperated_files['Patient'])
+
+    # seperated_files['Patient'] = seperated_files['Patient'].convert_dtypes()
+    # # seperated_files['Patient'] = seperated_files['Patient'].explode('resource.extension')
+    # seperated_files['Patient'] = file_transformer.flatten_df(seperated_files['Patient'])
+
+    # mySQL_connection("conn").post(unpacked_files['resource.resourceType'].unique()[0], seperated_files['Patient'])
 
 
 #     # unpacked_files  = Transform(raw_files).unpack_by_map()
