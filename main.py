@@ -29,36 +29,9 @@ from    functools import partial
 from    itertools import repeat
 
 
-# from flatten_json import flatten_json
+from flatten_json import flatten_json
 # amended from PyPi flatten_json
-from flatten_json_copy import flatten_json
-# def flatten_json(nested_json, exclude=['']):
-#     """Flatten json object with nested keys into a single level.
-#         Args:
-#             nested_json: A nested json object.
-#             exclude: Keys to exclude from output.
-#         Returns:
-#             The flattened json object if successful, None otherwise.
-#     """
-#     out = {}
-
-#     def flatten(x, name='', exclude=exclude):
-#         if type(x) is dict:
-#             for a in x:
-#                 if a not in exclude: flatten(x[a], name + a + '_')
-#                 # if a not in exclude: flatten(x[a], name + a + '_')
-#         elif type(x) is list:
-#             i = 0
-#             for a in x:
-#                 flatten(a, name + str(i) + '_')
-#                 # flatten(a, name + '_')
-#                 i += 1
-#         else:
-#             out[name[:-1]] = x
-
-#     flatten(nested_json)
-#     return out
-
+# from flatten_json_copy import flatten_json
 
 
 # transform the files
@@ -69,13 +42,13 @@ class Transform:
         # self.files = files
         pass
 
-    def unpack_by_loop(self, files):
+    def unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
         file_count  = len(files)
         list_of_dfs = [0]*file_count 
 
         for index, file in enumerate(files):
             data    = pd.read_json(file)
-            df      = pd.json_normalize(data["entry"], max_level=20)
+            df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
             list_of_dfs[index] = df
 
         combined_df = pd.concat(list_of_dfs)
@@ -334,6 +307,35 @@ def match_target_table_formatting():
 def auto_convert_types(df):
     pass
 
+# def load_all_tables():
+
+# import csv
+
+
+
+def exploder(df, df_name):
+    df = df
+    if df_name=='Patient':
+        df = df.explode('resource.extension')
+        df = df.explode('resource.identifier')
+        df = df.explode('resource.address')
+    elif df_name=='Encounter':
+        df = df.explode('resource.participant')
+    elif df_name=='Claim':
+        df = df.explode('resource.item')
+    elif df_name=='ExplanationOfBenefit':
+        df = df.explode('resource.contained')
+        df = df.explode('resource.item')
+    elif df_name=='Provenance':
+        df = df.explode('resource.target')
+        df = df.explode('resource.agent')
+
+
+
+
+    return df
+
+
 
 def main():
     raw_files           = Extract(files=1).getFiles()
@@ -344,77 +346,34 @@ def main():
     seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
 
     for df in seperated_files:
-        seperated_files[df] = seperated_files[df].convert_dtypes()
+
+
+        # seperated_files[df] = seperated_files[df].convert_dtypes()
+        # print(f"\n\n\n\nprinting")
+        # print(seperated_files[df].columns.tolist())
+        # print(seperated_files[df]['fullUrl'])
+        # seperated_files[df] = seperated_files[df].explode('resource.extension')
+        # seperated_files[df] = seperated_files[df].explode('resource.identifier')
+        # seperated_files[df] = seperated_files[df].explode('resource.address')
+        # print(f"\n\n\n\n\n")
+        print(df)
+        print(seperated_files[df].columns.tolist())
+        seperated_files[df] = exploder(seperated_files[df], df)
+
+
         seperated_files[df] = file_transformer.flatten_df(seperated_files[df])
+        # print(seperated_files[df].columns.tolist())
+        # if df=='ExplanationOfBenefit':
+        #     stop
+        #     seperated_files[df].to_csv('out.csv')    
+
         mySQL_connection("conn").post(df, seperated_files[df])
 
 
-    # seperated_files['Patient'] = seperated_files['Patient'].convert_dtypes()
-    # # seperated_files['Patient'] = seperated_files['Patient'].explode('resource.extension')
-    # seperated_files['Patient'] = file_transformer.flatten_df(seperated_files['Patient'])
 
-    # mySQL_connection("conn").post(unpacked_files['resource.resourceType'].unique()[0], seperated_files['Patient'])
+        # if df=='Patient':
+        #     break
 
-
-#     # unpacked_files  = Transform(raw_files).unpack_by_map()
-#     print(unpacked_files)
-#     print(unpacked_files.columns.tolist())
-#     print(unpacked_files['resource.resourceType'].unique())
-
-#     # seperated_files = file_transformer.seperate_by_uniqueness_loop(unpacked_files, 'resource.resourceType')
-
-#     seperated_files = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
-#     # print(seperated_files)
-#     # print(seperated_files['Patient'].info(verbose=True))
-#     # print(seperated_files['Patient'].convert_dtypes().dtypes)
-#     seperated_files['Patient'] = seperated_files['Patient'].convert_dtypes()
-# #     print(seperated_files['Patient'].info(verbose=True))
-
-# #     seperated_files['Patient']["fullUrl"] = seperated_files['Patient']["fullUrl"].str.replace("[urn::uuid:]", "")
-# #     print(seperated_files['Patient'])
-# # # resource.extension
-# #     print(seperated_files['Patient']['resource.extension'])
-
-#     # unpack      = pd.json_normalize(seperated_files['Patient']['resource.extension'], max_level=20)
-#     seperated_files['Patient'] = seperated_files['Patient'].explode('resource.extension')
-#     # print(unpack)
-#     print(seperated_files['Patient'])
-#     # df["A"].str.replace("[ab]","")
-#     # for df in seperated_files:
-#     #     print(df.columns.tolist())
-
-
-#     # Idx=df.set_index(['COL1','COL2']).COL3.apply(pd.Series).stack().index
-
-#     # pd.DataFrame(df.set_index(['COL1','COL2']).COL3.apply(pd.Series).stack().values.tolist(),index=Idx).reset_index().drop('level_2',1)
-
-
-#     # seperated_files['Patient'] = pd.DataFrame([x for x in seperated_files['Patient']['resource.extension']])
-#     # print(seperated_files['Patient'])
-
-
-#     # print(seperated_files[0].columns.tolist())
-#     # print(unpacked_files['resource.resourceType'].unique()[0])
-#     # print(seperated_files['Patient'].to_string())
-
-
-#     seperated_files['Patient'] = file_transformer.flatten_df(seperated_files['Patient'])
-
-#     print(f"\n\n\n\n\n\n\n\n")
-#     print("new output")
-#     print(seperated_files['Patient'])
-#     print(f"\n\n\n\n\n\n\n\n")
-
-
-
-#     mySQL_connection("conn").post(unpacked_files['resource.resourceType'].unique()[0], seperated_files['Patient'])
-
-    # print(unpacked_files)
-
-    # mySQL_connection().run()
-    #  mySQL_connection("conn").post("table_name", "data")
-    # results = mySQL_connection("connection_details").get("table_name")
-    # print(results)
 
 
 if __name__ == '__main__':
