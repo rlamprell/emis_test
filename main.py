@@ -17,7 +17,7 @@ class Extract:
     def __init__(self, files):
         current_path    = os.getcwd()
         # print(current_path)
-        self.files      = glob.glob(f"{current_path}\data\*.json")
+        self.files      = glob.glob(f"{current_path}\data copy\*.json")
 
     def getFiles(self):
         return self.files
@@ -30,6 +30,7 @@ from    itertools import repeat
 
 
 from flatten_json import flatten_json
+from flatten_json import flatten
 # amended from PyPi flatten_json
 # from flatten_json_copy import flatten_json
 
@@ -60,7 +61,7 @@ class Transform:
     # Might have trouble scaling this if:
     # -- the number of files is massive
     # -- the content of one or more files is massive
-    def unpack_by_map(self, files, workerCount=10):
+    def unpack_by_map(self, files, normalise_on_column="entry", workerCount=10):
         with Pool(workerCount) as p:
             dfs = p.map(self._file_unpacker, files)
 
@@ -72,7 +73,7 @@ class Transform:
 
     def _file_unpacker(self, file):
         data    = pd.read_json(file)
-        df      = pd.json_normalize(data["entry"], max_level=20)
+        df      = pd.json_normalize(data['entry'], max_level=20)
         # df = pd.DataFrame([flatten_json(x) for x in data["entry"]])
         # flatten_json.flatten_json()
 
@@ -137,14 +138,38 @@ class Transform:
 
     # it's dumb that we go json->df->json->df
     def flatten_df(self, df):
+        print(df.columns.tolist())
         data = df.to_dict('records')
-        # print(f"mydata: {data}")
+        # df = pd.DataFrame([flatten(data)])
+        df = pd.DataFrame([flatten(d, ".") for d in data])
+        print(df.columns.tolist())
+        # print(data)
+        # stop
+
+        # # print(f"mydata: {data}")
         # df = pd.DataFrame([flatten_json(data)])    
 
-        df = pd.DataFrame([flatten_json(x) for x in data])
-        # df = pd.DataFrame([flatten_json(data[key]) for key in data])
+        # df = pd.DataFrame([flatten_json(x) for x in data])
+        # # df = pd.DataFrame([flatten_json(data[key]) for key in data])
         return df
         # return     
+
+
+    def new_unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
+        file_count  = len(files)
+        list_of_dfs = [0]*file_count 
+
+        for index, file in enumerate(files):
+            data    = pd.read_json(file)
+            df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
+            list_of_dfs[index] = df
+
+        combined_df = pd.concat(list_of_dfs)
+        combined_df = combined_df.reset_index()
+
+        return combined_df
+
+
 
 
 # load the files into a db
@@ -319,6 +344,7 @@ def exploder(df, df_name):
         df = df.explode('resource.extension')
         df = df.explode('resource.identifier')
         df = df.explode('resource.address')
+        df = df.explode('resource.name')
     elif df_name=='Encounter':
         df = df.explode('resource.participant')
     elif df_name=='Claim':
@@ -329,6 +355,11 @@ def exploder(df, df_name):
     elif df_name=='Provenance':
         df = df.explode('resource.target')
         df = df.explode('resource.agent')
+    elif df_name=='CarePlan':
+        df = df.explode('resource.category')
+    elif df_name=='DiagnosticReport':
+        df = df.explode('resource.category')
+        # df = df.explode('resource.code')
 
 
 
@@ -346,26 +377,12 @@ def main():
     seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
 
     for df in seperated_files:
-
-
-        # seperated_files[df] = seperated_files[df].convert_dtypes()
-        # print(f"\n\n\n\nprinting")
-        # print(seperated_files[df].columns.tolist())
-        # print(seperated_files[df]['fullUrl'])
-        # seperated_files[df] = seperated_files[df].explode('resource.extension')
-        # seperated_files[df] = seperated_files[df].explode('resource.identifier')
-        # seperated_files[df] = seperated_files[df].explode('resource.address')
-        # print(f"\n\n\n\n\n")
+        seperated_files[df] = exploder(seperated_files[df], df)
+        seperated_files[df] = file_transformer.flatten_df(seperated_files[df])
         print(df)
         print(seperated_files[df].columns.tolist())
-        seperated_files[df] = exploder(seperated_files[df], df)
 
-
-        seperated_files[df] = file_transformer.flatten_df(seperated_files[df])
-        # print(seperated_files[df].columns.tolist())
-        # if df=='ExplanationOfBenefit':
-        #     stop
-        #     seperated_files[df].to_csv('out.csv')    
+        seperated_files[df]  = seperated_files[df].drop_duplicates()
 
         mySQL_connection("conn").post(df, seperated_files[df])
 
@@ -375,6 +392,47 @@ def main():
         #     break
 
 
+def main2():
+    raw_files           = Extract(files=1).getFiles()
+    # # unpacked_files  = Transform(raw_files).unpack_by_loop()
+
+    file_transformer    = Transform()
+    unpacked_files      = file_transformer.unpack_by_map(raw_files, 'entry')
+    print(f"\n\n\n\n\n")
+    print("unpacked files")
+    print(unpacked_files.columns.tolist())
+    seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
+    
+    print(f"\n\n\n\n\n")
+    print("seperated files")
+    print(seperated_files['Patient'].columns.tolist())
+
+    print(f"\n\n\n\n\n")
+    for df in seperated_files:
+        print(seperated_files[df])
+        print(seperated_files[df]["resource.extension"])
+        print(type(seperated_files[df]["resource.extension"][0]))
+
+        # check the first item
+        this_type = seperated_files[df]["resource.extension"][0]
+        print(type(this_type))
+        if isinstance(this_type, list):
+            print("is list")
+            print(seperated_files[df]["resource.extension"][0])
+
+            
+
+        # seperated_files[df] = exploder(seperated_files[df], df)
+        # seperated_files[df] = file_transformer.flatten_df(seperated_files[df])
+        # print(df)
+        # print(seperated_files[df].columns.tolist())
+
+        # mySQL_connection("conn").post(df, seperated_files[df])
+
+
+
+        if df=='Patient':
+            break
 
 if __name__ == '__main__':
     main()
