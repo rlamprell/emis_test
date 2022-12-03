@@ -1,7 +1,15 @@
-from dataclasses import dataclass
+from dataclasses    import dataclass
+from abc            import ABC
 
 @dataclass
-class mySQL_connection_details:
+class db_connection_config(ABC):
+    config = {
+        "abstract-class": "blank"
+    }
+
+
+@dataclass
+class mySQL_connection_details(db_connection_config):
     config = {
         'container':    'mysql',
         'host':         'localhost',

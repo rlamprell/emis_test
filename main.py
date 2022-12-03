@@ -1,4 +1,3 @@
-
 from src.extract                                    import Extract
 from src.transform                                  import Transform
 from src.db_connections.db_connection               import mysql_conn
@@ -13,7 +12,8 @@ def main():
 
     for df in seperated_files:
         current_df = seperated_files[df]
-        fields_to_remove = ['resource.extension',
+        fields_to_remove = [
+            'resource.extension',
             'resource.identifier',
             'resource.address',
             'resource.name',
@@ -22,6 +22,7 @@ def main():
             'resource.item',
             'resource.category',
             'resource.target']
+            
         current_df = file_transformer.explode_nested_arrays(current_df, df, fields_to_remove)
         current_df = file_transformer.flatten_df(current_df)
         current_df = current_df.drop_duplicates()
