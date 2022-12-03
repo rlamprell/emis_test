@@ -1,11 +1,9 @@
-
-from sqlalchemy.dialects import mysql
-from sqlalchemy import select, insert
-import sqlalchemy as db
-from dataclasses import dataclass
-
-from abc import ABC, abstractmethod
-from .mysql import db_connection_config
+import  sqlalchemy              as db
+from    sqlalchemy.dialects     import mysql
+from    sqlalchemy              import select, insert
+from    dataclasses             import dataclass
+from    abc                     import ABC, abstractmethod
+from    .mysql                  import db_connection_config
 
 
 class db_connection(ABC):
@@ -93,7 +91,6 @@ class db_actions(ABC):
 
 
 
-# NO DEFENSE AGAINST SHADOW READS AND CONCURENCY ISSUES
 class mySQL_actions(db_actions):
     def __init__(self):
         self.connection_details = mySQL_connection_details()
@@ -113,6 +110,7 @@ class mySQL_actions(db_actions):
 
     def delete():
         pass
+
 
 
 
@@ -149,7 +147,6 @@ class db_connection(db_connection):
         engine = db.create_engine(self._connectionString)
         with engine.connect() as connection:
             df.to_sql(table_name, connection, if_exists='replace', index=False)
-
 
 
 
