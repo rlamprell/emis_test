@@ -1,14 +1,11 @@
-import pandas as pd
+import  pandas as pd
 from    multiprocessing import Pool, freeze_support
 from    dataclasses import dataclass
 from    functools import partial
 from    itertools import repeat
+from    flatten_json import flatten_json
+from    flatten_json import flatten
 
-
-from flatten_json import flatten_json
-from flatten_json import flatten
-# amended from PyPi flatten_json
-# from flatten_json_copy import flatten_json
 
 
 # transform the files
@@ -75,7 +72,6 @@ class Transform:
         return output_dict
 
 
-
     # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
     def seperate_by_uniqueness_map(self, df, column, workerCount=20):
         unique_items    = df[column].unique()
@@ -122,26 +118,59 @@ class Transform:
         return combined_df
 
 
-    def explode_nested_arrays(self, df, df_name):
-        df = df
-        if df_name=='Patient':
-            df = df.explode('resource.extension')
-            df = df.explode('resource.identifier')
-            df = df.explode('resource.address')
-            df = df.explode('resource.name')
-        elif df_name=='Encounter':
-            df = df.explode('resource.participant')
-        elif df_name=='Claim':
-            df = df.explode('resource.item')
-        elif df_name=='ExplanationOfBenefit':
-            df = df.explode('resource.contained')
-            df = df.explode('resource.item')
-        elif df_name=='Provenance':
-            df = df.explode('resource.target')
-            df = df.explode('resource.agent')
-        elif df_name=='CarePlan':
-            df = df.explode('resource.category')
-        elif df_name=='DiagnosticReport':
-            df = df.explode('resource.category')
+    # def explode_nested_arrays(self, df, df_name):
+    #     from pprint import pprint
+    #     df = df
+    #     if df_name=='Patient':
+    #         df = df.explode('resource.extension')
+    #         # df = df.explode('resource.extension.extension')
+    #         df = df.explode('resource.identifier')
+    #         df = df.explode('resource.address')
+    #         df = df.explode('resource.name')
+
+
+    #         new_col     = pd.json_normalize(df['resource.extension'])
+    #         pprint(new_col.to_dict()['valueCode'])
+    #         # new_col = pd.json_normalize(df)
+
+    #         print(new_col.columns.tolist())
+    #         # newest_col  = pd.concat([df.drop('resource.extension', axis=1), new_col], axis=1)
+    #         dropped_df = df.drop('resource.extension', axis=1)
+
+    #         # concat = pd.concat([dropped_df, new_col], axis=1, ignore_index=True)
+
+            
+    #         # pd.concat([df.drop(['resource.extension'], axis=1), df['b'].apply(pd.Series)], axis=1)
+
+
+    #         print()
+    #         print(f"\n\n\n\n\n\n")
+    #         print("made it")
+
+    #         print(f"\n\n\n\n\n\n")
+    #         print(df.columns.tolist())
+    #         print(new_col.columns.tolist())
+
+    #         # df = pd.json_normalize(df['resource.identifier'])
+    #         # df = pd.json_normalize(df['resource.name'])
+    #         # df = pd.json_normalize(df['resource.address'])
+
+    #         # df['resource.extension'].apply(pd.Series)
+    #         # df = pd.concat([df.drop(['resource.extension'], axis=1), df['resource.extension'].apply(pd.Series)], axis=1)
+    #         # print(df['resource.extension'])
+    #     elif df_name=='Encounter':
+    #         df = df.explode('resource.participant')
+    #     elif df_name=='Claim':
+    #         df = df.explode('resource.item')
+    #     elif df_name=='ExplanationOfBenefit':
+    #         df = df.explode('resource.contained')
+    #         df = df.explode('resource.item')
+    #     elif df_name=='Provenance':
+    #         df = df.explode('resource.target')
+    #         df = df.explode('resource.agent')
+    #     elif df_name=='CarePlan':
+    #         df = df.explode('resource.category')
+    #     elif df_name=='DiagnosticReport':
+    #         df = df.explode('resource.category')
         
-        return df
+    #     return df

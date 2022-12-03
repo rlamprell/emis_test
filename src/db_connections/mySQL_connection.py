@@ -71,11 +71,8 @@ class mySQL_connection:
 
     def get(self, table):
         # conn_details = mySQL_connection_details()
-        # db_conn = db_connection(conn_details)
-
-
-
-        return self.connection_details.executeGet(table)
+        db_conn = db_connection(self.connection_details)
+        return db_conn.executeGet(table)
 
     def post(self, table, data):
         # conn_details = mySQL_connection_details()

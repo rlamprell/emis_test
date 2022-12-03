@@ -4,27 +4,33 @@ from sqlalchemy import select, insert
 import sqlalchemy as db
 from dataclasses import dataclass
 
-# This should really be in a secrets manager or something to keep it secure
-
-
-@dataclass
-class mySQL_connection_details:
-    config = {
-        'container':    'mysql',
-        'host':         'localhost',
-        'port':         3306,
-        'user':         'root',
-        'password':     'mypassword',
-        'database':     'emis_test'
-    }
+from abc import ABC, abstractmethod
 
 
 
-
-class db_connection:
+class db_connection(ABC):
     def __init__(self, connection_details):
         self.config = mySQL_connection_details().config
         self._connectionString = self._connectionString()
+
+    @abstractmethod
+    def _connectionString(self):
+        pass
+    
+    @abstractmethod
+    def executeGet(self, table, columns):
+        pass
+
+    @abstractmethod
+    def executePost(self, table_name, df):
+        pass
+
+
+
+
+class db_connection_mysql(db_connection):
+    def __init__(self, connection_details):
+        super().__init__(connection_details)
 
 
     def _connectionString(self):
@@ -59,24 +65,45 @@ class db_connection:
 
 
 
+class db_actions(ABC):
+    @abstractmethod
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def get(self, table):
+        pass
+
+    @abstractmethod
+    def post(self, table, data):
+        pass
+
+    @abstractmethod
+    def put():
+        pass
+    
+    @abstractmethod
+    def patch():
+        pass
+
+    @abstractmethod
+    def delete():
+        pass
+
+
+
+
 # NO DEFENSE AGAINST SHADOW READS AND CONCURENCY ISSUES
-class mySQL_connection:
-    def __init__(self, connection_details: mySQL_connection_details):
-        self.connection_details = connection_details
+class mySQL_actions(db_actions):
+    def __init__(self):
+        self.connection_details = mySQL_connection_details()
 
     def get(self, table):
-        # conn_details = mySQL_connection_details()
-        # db_conn = db_connection(conn_details)
-
-
-
         return self.connection_details.executeGet(table)
 
     def post(self, table, data):
-        # conn_details = mySQL_connection_details()
-        # db_conn = db_connection(conn_details)
-        self.connection_details.executePost(table, data)
-        # return db_conn.executeGet(table)
+        db_conn = db_connection(self.connection_details)
+        return db_conn.executeGet(table)
 
     def put():
         pass

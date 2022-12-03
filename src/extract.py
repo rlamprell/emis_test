@@ -10,5 +10,6 @@ class Extract:
         # print(current_path)
         self.files      = glob.glob(f"{current_path}\{folder_name}\*.json")
 
+
     def getFiles(self):
         return self.files
