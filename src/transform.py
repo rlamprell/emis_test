@@ -144,3 +144,28 @@ class Transform:
         combined_df = combined_df.reset_index()
 
         return combined_df
+
+    # @classmethod
+    def exploder(self, df, df_name):
+        df = df
+        if df_name=='Patient':
+            df = df.explode('resource.extension')
+            df = df.explode('resource.identifier')
+            df = df.explode('resource.address')
+            df = df.explode('resource.name')
+        elif df_name=='Encounter':
+            df = df.explode('resource.participant')
+        elif df_name=='Claim':
+            df = df.explode('resource.item')
+        elif df_name=='ExplanationOfBenefit':
+            df = df.explode('resource.contained')
+            df = df.explode('resource.item')
+        elif df_name=='Provenance':
+            df = df.explode('resource.target')
+            df = df.explode('resource.agent')
+        elif df_name=='CarePlan':
+            df = df.explode('resource.category')
+        elif df_name=='DiagnosticReport':
+            df = df.explode('resource.category')
+        
+        return df
