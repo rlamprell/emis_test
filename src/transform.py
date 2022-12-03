@@ -15,7 +15,7 @@ class Transform:
     def __init__(self):
         pass
 
-    def unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
+    def unpack_by_loop(self, files: list, normalise_on_column: str="entry", max_recurrsion_depth: int=20):
         file_count  = len(files)
         list_of_dfs = [0]*file_count 
 
@@ -55,25 +55,24 @@ class Transform:
     # Might have trouble scaling this if:
     # -- the number of files is massive
     # -- the content of one or more files is massive
-    def unpack_by_map(self, files, normalise_on_column="entry", workerCount=10):
+    def unpack_by_map(self, files: list, normalise_on_column: str="entry", workerCount: int=10)->list:
         with Pool(workerCount) as p:
             dfs = p.map(self._file_unpacker, files)
 
         dfs = pd.concat(list(dfs))
         dfs = dfs.reset_index(drop=True)
-
+        
         return dfs
 
 
-    def _file_unpacker(self, file):
+    def _file_unpacker(self, file: str)->pd.core.frame.DataFrame:
         data    = pd.read_json(file)
         df      = pd.json_normalize(data['entry'], max_level=20)
 
         return df
 
 
-    # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
-    def seperate_by_uniqueness_map(self, df, column, workerCount=20):
+    def seperate_by_uniqueness_map(self, df, column: str, workerCount: int=20)->dict:
         unique_items    = df[column].unique()
         unique_count    = len(unique_items)
         row_count       = len(df.index)
@@ -86,7 +85,7 @@ class Transform:
         return output_dict
 
     
-    def _df_seperator(self, item, column, df):
+    def _df_seperator(self, item: str, column: str, df)->pd.core.frame.DataFrame:
         item_filter = df[column]==item
         df          = df.where(item_filter, inplace=False)
         df          = df.dropna(how='all')
@@ -96,7 +95,7 @@ class Transform:
 
 
     # it's dumb that we go json->df->dict->df
-    def flatten_df(self, df):
+    def flatten_df(self, df)->pd.core.frame.DataFrame:
         data    = df.to_dict('records')
         df      = pd.DataFrame([flatten(d, ".") for d in data])
 

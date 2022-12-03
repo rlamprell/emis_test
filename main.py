@@ -8,7 +8,7 @@ from src.db_connections.mySQL_connection import mySQL_connection
 
 
 def main():
-    raw_files           = Extract(folder_name="test_data").getFiles()
+    raw_files           = Extract(folder_name="data_test").getFiles()
     file_transformer    = Transform()
     unpacked_files      = file_transformer.unpack_by_map(raw_files)
     seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
@@ -22,7 +22,7 @@ def main():
         mySQL_connection().post(df, current_df)
         # output = mySQL_connection().get('Patient')
         # print(output)
-        # mySQL = db_connection("mysql")
 
+        
 if __name__ == '__main__':
     main()
