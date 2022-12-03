@@ -1,340 +1,334 @@
-import pandas as pd
-
-import glob
-import os
-
-class File:
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.file_path = file_path
+# import pandas as pd
 
 
 
-# import the files
-class Extract:
-    __slots__ = ('files')
-
-    def __init__(self, files):
-        current_path    = os.getcwd()
-        # print(current_path)
-        self.files      = glob.glob(f"{current_path}\data copy\*.json")
-
-    def getFiles(self):
-        return self.files
+# class File:
+#     def __init__(self, file_name):
+#         self.file_name = file_name
+#         self.file_path = file_path
 
 
-from    multiprocessing import Pool, freeze_support
-from    dataclasses import dataclass
-from    functools import partial
-from    itertools import repeat
 
 
-from flatten_json import flatten_json
-from flatten_json import flatten
-# amended from PyPi flatten_json
-# from flatten_json_copy import flatten_json
+# from    multiprocessing import Pool, freeze_support
+# from    dataclasses import dataclass
+# from    functools import partial
+# from    itertools import repeat
 
 
-# transform the files
-class Transform:
-    __slots__ = ('files')
-
-    def __init__(self):#, files):
-        # self.files = files
-        pass
-
-    def unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
-        file_count  = len(files)
-        list_of_dfs = [0]*file_count 
-
-        for index, file in enumerate(files):
-            data    = pd.read_json(file)
-            df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
-            list_of_dfs[index] = df
-
-        combined_df = pd.concat(list_of_dfs)
-        combined_df = combined_df.reset_index()
-
-        return combined_df
+# from flatten_json import flatten_json
+# from flatten_json import flatten
+# # amended from PyPi flatten_json
+# # from flatten_json_copy import flatten_json
 
 
-    # Might have trouble scaling this if:
-    # -- the number of files is massive
-    # -- the content of one or more files is massive
-    def unpack_by_map(self, files, normalise_on_column="entry", workerCount=10):
-        with Pool(workerCount) as p:
-            dfs = p.map(self._file_unpacker, files)
+# # transform the files
+# class Transform:
+#     __slots__ = ('files')
 
-        dfs = pd.concat(list(dfs))
-        dfs = dfs.reset_index(drop=True)
+#     def __init__(self):#, files):
+#         # self.files = files
+#         pass
 
-        return dfs
+#     def unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
+#         file_count  = len(files)
+#         list_of_dfs = [0]*file_count 
+
+#         for index, file in enumerate(files):
+#             data    = pd.read_json(file)
+#             df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
+#             list_of_dfs[index] = df
+
+#         combined_df = pd.concat(list_of_dfs)
+#         combined_df = combined_df.reset_index()
+
+#         return combined_df
 
 
-    def _file_unpacker(self, file):
-        data    = pd.read_json(file)
-        df      = pd.json_normalize(data['entry'], max_level=20)
-        # df = pd.DataFrame([flatten_json(x) for x in data["entry"]])
-        # flatten_json.flatten_json()
+#     # Might have trouble scaling this if:
+#     # -- the number of files is massive
+#     # -- the content of one or more files is massive
+#     def unpack_by_map(self, files, normalise_on_column="entry", workerCount=10):
+#         with Pool(workerCount) as p:
+#             dfs = p.map(self._file_unpacker, files)
 
-        return df
+#         dfs = pd.concat(list(dfs))
+#         dfs = dfs.reset_index(drop=True)
+
+#         return dfs
+
+
+#     def _file_unpacker(self, file):
+#         data    = pd.read_json(file)
+#         df      = pd.json_normalize(data['entry'], max_level=20)
+#         # df = pd.DataFrame([flatten_json(x) for x in data["entry"]])
+#         # flatten_json.flatten_json()
+
+#         return df
         
 
-    def seperate_by_uniqueness_loop(self, df, column):
-        unique_items    = df[column].unique()
-        unique_count    = len(unique_items)
-        df_list         = [0]*unique_count
-        row_count       = len(df.index)
-        incr_row_count  = 0
+#     def seperate_by_uniqueness_loop(self, df, column):
+#         unique_items    = df[column].unique()
+#         unique_count    = len(unique_items)
+#         df_list         = [0]*unique_count
+#         row_count       = len(df.index)
+#         incr_row_count  = 0
 
-        for index, item in enumerate(unique_items):
-            # df_list = df[['ItemId', 'ItemDescription']].drop_duplicates().set_index('ItemId')
-            item_filter     = df[column]==item
-            df_list[index]  = df.where(item_filter, inplace=False)
-            # print(df_list[index])
-            df_list[index]  = df_list[index].dropna(how='all')
-            df_list[index]  = df_list[index].dropna(axis=1)
-            # print(df_list[index])
-            incr_row_count += len(df_list[index].index)
+#         for index, item in enumerate(unique_items):
+#             # df_list = df[['ItemId', 'ItemDescription']].drop_duplicates().set_index('ItemId')
+#             item_filter     = df[column]==item
+#             df_list[index]  = df.where(item_filter, inplace=False)
+#             # print(df_list[index])
+#             df_list[index]  = df_list[index].dropna(how='all')
+#             df_list[index]  = df_list[index].dropna(axis=1)
+#             # print(df_list[index])
+#             incr_row_count += len(df_list[index].index)
         
-        # print(row_count)
-        # print(incr_row_count)
-        if row_count!=incr_row_count:
-            print("data integrity issue")
+#         # print(row_count)
+#         # print(incr_row_count)
+#         if row_count!=incr_row_count:
+#             print("data integrity issue")
 
-        output_dict = dict(zip(unique_items, df_list))
-        # print(output_dict)
+#         output_dict = dict(zip(unique_items, df_list))
+#         # print(output_dict)
 
-        return output_dict
+#         return output_dict
 
 
 
-    # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
-    def seperate_by_uniqueness_map(self, df, column, workerCount=20):
-        unique_items    = df[column].unique()
-        unique_count    = len(unique_items)
-        # df_list         = [0]*unique_count
-        row_count       = len(df.index)
+#     # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
+#     def seperate_by_uniqueness_map(self, df, column, workerCount=20):
+#         unique_items    = df[column].unique()
+#         unique_count    = len(unique_items)
+#         # df_list         = [0]*unique_count
+#         row_count       = len(df.index)
 
-        with Pool(workerCount) as p:
-            df_list = p.starmap(self._df_seperator, zip(unique_items, repeat(column), repeat(df)))
+#         with Pool(workerCount) as p:
+#             df_list = p.starmap(self._df_seperator, zip(unique_items, repeat(column), repeat(df)))
 
-        # NEED A DI CHECK HERE
+#         # NEED A DI CHECK HERE
 
-        output_dict = dict(zip(unique_items, df_list))
+#         output_dict = dict(zip(unique_items, df_list))
         
-        return output_dict
+#         return output_dict
 
     
-    def _df_seperator(self, item, column, df):
-        item_filter = df[column]==item
-        df          = df.where(item_filter, inplace=False)
-        df          = df.dropna(how='all')
-        df          = df.dropna(axis=1)
-        # df          = self._flatten_df(df)
+#     def _df_seperator(self, item, column, df):
+#         item_filter = df[column]==item
+#         df          = df.where(item_filter, inplace=False)
+#         df          = df.dropna(how='all')
+#         df          = df.dropna(axis=1)
+#         # df          = self._flatten_df(df)
 
-        return df
-
-
-    # it's dumb that we go json->df->json->df
-    def flatten_df(self, df):
-        print(df.columns.tolist())
-        data = df.to_dict('records')
-        # df = pd.DataFrame([flatten(data)])
-        df = pd.DataFrame([flatten(d, ".") for d in data])
-        print(df.columns.tolist())
-        # print(data)
-        # stop
-
-        # # print(f"mydata: {data}")
-        # df = pd.DataFrame([flatten_json(data)])    
-
-        # df = pd.DataFrame([flatten_json(x) for x in data])
-        # # df = pd.DataFrame([flatten_json(data[key]) for key in data])
-        return df
-        # return     
+#         return df
 
 
-    def new_unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
-        file_count  = len(files)
-        list_of_dfs = [0]*file_count 
+#     # it's dumb that we go json->df->json->df
+#     def flatten_df(self, df):
+#         print(df.columns.tolist())
+#         data = df.to_dict('records')
+#         # df = pd.DataFrame([flatten(data)])
+#         df = pd.DataFrame([flatten(d, ".") for d in data])
+#         print(df.columns.tolist())
+#         # print(data)
+#         # stop
 
-        for index, file in enumerate(files):
-            data    = pd.read_json(file)
-            df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
-            list_of_dfs[index] = df
+#         # # print(f"mydata: {data}")
+#         # df = pd.DataFrame([flatten_json(data)])    
 
-        combined_df = pd.concat(list_of_dfs)
-        combined_df = combined_df.reset_index()
-
-        return combined_df
-
-
-
-
-# load the files into a db
-class Load:
-    def __init__(self, files, db):
-        pass
+#         # df = pd.DataFrame([flatten_json(x) for x in data])
+#         # # df = pd.DataFrame([flatten_json(data[key]) for key in data])
+#         return df
+#         # return     
 
 
-from abc import ABC
+#     def new_unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
+#         file_count  = len(files)
+#         list_of_dfs = [0]*file_count 
 
-class db_interface(ABC):
-    def __init__(self):
-        pass
+#         for index, file in enumerate(files):
+#             data    = pd.read_json(file)
+#             df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
+#             list_of_dfs[index] = df
 
-    def get():
-        pass
+#         combined_df = pd.concat(list_of_dfs)
+#         combined_df = combined_df.reset_index()
 
-    def post():
-        pass
-
-    def put():
-        pass
-
-    def patch():
-        pass
-
-    def delete():
-        pass
+#         return combined_df
 
 
-# class mySQL(database):
-class db_mySQL(db_interface):
-    def __init__(self, connection):
-        pass
 
 
-from dataclasses import dataclass
-
-# This should really be in a secrets manager or something to keep it secure
-@dataclass
-class mySQL_connection_details:
-    config = {
-        'container':    'mysql',
-        'host':         'localhost',
-        'port':         3306,
-        'user':         'root',
-        'password':     'mypassword',
-        'database':     'emis_test'
-    }
+# # load the files into a db
+# class Load:
+#     def __init__(self, files, db):
+#         pass
 
 
-import sqlalchemy as db
-from sqlalchemy import select, insert
-from sqlalchemy.dialects import mysql
+# from abc import ABC
+
+# class db_interface(ABC):
+#     def __init__(self):
+#         pass
+
+#     def get():
+#         pass
+
+#     def post():
+#         pass
+
+#     def put():
+#         pass
+
+#     def patch():
+#         pass
+
+#     def delete():
+#         pass
 
 
-class db_connection:
-    def __init__(self, connection_details):
-        self.config             = mySQL_connection_details().config
-        self._connectionString  = self._connectionString()
+# # class mySQL(database):
+# class db_mySQL(db_interface):
+#     def __init__(self, connection):
+#         pass
+
+
+# from dataclasses import dataclass
+
+# # This should really be in a secrets manager or something to keep it secure
+# @dataclass
+# class mySQL_connection_details:
+#     config = {
+#         'container':    'mysql',
+#         'host':         'localhost',
+#         'port':         3306,
+#         'user':         'root',
+#         'password':     'mypassword',
+#         'database':     'emis_test'
+#     }
+
+
+# import sqlalchemy as db
+# from sqlalchemy import select, insert
+# from sqlalchemy.dialects import mysql
+
+
+# class db_connection:
+#     def __init__(self, connection_details):
+#         self.config             = mySQL_connection_details().config
+#         self._connectionString  = self._connectionString()
     
 
-    def _connectionString(self):
-        db_container    = self.config.get('container')
-        db_user         = self.config.get('user')
-        db_pwd          = self.config.get('password')
-        db_host         = self.config.get('host')
-        db_port         = self.config.get('port')
-        db_name         = self.config.get('database')
-        connection_str  = f'{db_container}+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
-        return connection_str
+#     def _connectionString(self):
+#         db_container    = self.config.get('container')
+#         db_user         = self.config.get('user')
+#         db_pwd          = self.config.get('password')
+#         db_host         = self.config.get('host')
+#         db_port         = self.config.get('port')
+#         db_name         = self.config.get('database')
+#         connection_str  = f'{db_container}+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+#         return connection_str
 
 
-    def executeGet(self, table, columns="*"):
-        engine = db.create_engine(self._connectionString)
-        with engine.connect() as connection:
-            metadata = db.MetaData(bind=engine)
-            metadata.reflect(only=[f'{table}'])
+#     def executeGet(self, table, columns="*"):
+#         engine = db.create_engine(self._connectionString)
+#         with engine.connect() as connection:
+#             metadata = db.MetaData(bind=engine)
+#             metadata.reflect(only=[f'{table}'])
 
-            test_table  = metadata.tables[f'{table}']
-            stmt        = select(f"{columns}").select_from(test_table)
-            results     = connection.execute(stmt).fetchall()
+#             test_table  = metadata.tables[f'{table}']
+#             stmt        = select(f"{columns}").select_from(test_table)
+#             results     = connection.execute(stmt).fetchall()
 
-        return results
+#         return results
 
     
-    def executePost(self, table_name, df):
-        engine = db.create_engine(self._connectionString)
-        # print(f"df: {type(df)}")
-        # print(type(table_name))
-        with engine.connect() as connection:
-            df.to_sql(table_name, connection, if_exists='replace', index=False)#, dtype='dict')
+#     def executePost(self, table_name, df):
+#         engine = db.create_engine(self._connectionString)
+#         # print(f"df: {type(df)}")
+#         # print(type(table_name))
+#         with engine.connect() as connection:
+#             df.to_sql(table_name, connection, if_exists='replace', index=False)#, dtype='dict')
 
-            # metadata = db.MetaData(bind=engine)
-            # metadata.reflect(only=[f'{table}'])
+#             # metadata = db.MetaData(bind=engine)
+#             # metadata.reflect(only=[f'{table}'])
 
-            # test_table  = metadata.tables[f'{table}']
-            # # stmt        = select('*').select_from(test_table)
-            # stmt        = 
-            # results     = connection.execute(stmt).fetchall()
+#             # test_table  = metadata.tables[f'{table}']
+#             # # stmt        = select('*').select_from(test_table)
+#             # stmt        = 
+#             # results     = connection.execute(stmt).fetchall()
 
-        # return results
-
-
-    def createTable(self, table_name):
-        engine = db.create_engine(self._connectionString)
-        with engine.connect() as connection:
-            pass
+#         # return results
 
 
-            # meta_data = {}
-            # this_table = db.Table(
-            #     "this_table",
-            #     meta_data,
-
-            # )
-
-            # metadata = db.MetaData(bind=engine)
-            # metadata.reflect(only=[f'{table}'])
-
-            # test_table  = metadata.tables[f'{table}']
-            # # stmt        = select('*').select_from(test_table)
-            # stmt        = db.insert()
-            # results     = connection.execute(stmt).fetchall()
-
-        return results
+#     def createTable(self, table_name):
+#         engine = db.create_engine(self._connectionString)
+#         with engine.connect() as connection:
+#             pass
 
 
-# NO DEFENSE AGAINST SHADOW READS AND CONCURENCY ISSUES
-class mySQL_connection:
-    def __init__(self, connection_details):
-        self.connection_details = connection_details
+#             # meta_data = {}
+#             # this_table = db.Table(
+#             #     "this_table",
+#             #     meta_data,
 
-    def get(self, table):
-        conn_details    = mySQL_connection_details()
-        db_conn         = db_connection(conn_details)
-        return db_conn.executeGet(table)
+#             # )
 
-    def post(self, table, data):
-        conn_details    = mySQL_connection_details()
-        db_conn         = db_connection(conn_details)
-        db_conn.executePost(table, data)
-        # return db_conn.executeGet(table)
+#             # metadata = db.MetaData(bind=engine)
+#             # metadata.reflect(only=[f'{table}'])
 
-    def put():
-        pass
+#             # test_table  = metadata.tables[f'{table}']
+#             # # stmt        = select('*').select_from(test_table)
+#             # stmt        = db.insert()
+#             # results     = connection.execute(stmt).fetchall()
 
-    def patch():
-        pass
+#         return results
 
-    def delete():
-        pass
+
+# # NO DEFENSE AGAINST SHADOW READS AND CONCURENCY ISSUES
+# class mySQL_connection:
+#     def __init__(self, connection_details):
+#         self.connection_details = connection_details
+
+#     def get(self, table):
+#         conn_details    = mySQL_connection_details()
+#         db_conn         = db_connection(conn_details)
+#         return db_conn.executeGet(table)
+
+#     def post(self, table, data):
+#         conn_details    = mySQL_connection_details()
+#         db_conn         = db_connection(conn_details)
+#         db_conn.executePost(table, data)
+#         # return db_conn.executeGet(table)
+
+#     def put():
+#         pass
+
+#     def patch():
+#         pass
+
+#     def delete():
+#         pass
 
 
 # NOT SURE IF I NEED THIS OR IF SQLALCH IS SMART ENOUGH TO DO IT ON ITS OWN
 # add in any missing columns as blank
-def match_target_table_formatting():
-    pass
+# def match_target_table_formatting():
+#     pass
 
-def auto_convert_types(df):
-    pass
+# def auto_convert_types(df):
+#     pass
 
 # def load_all_tables():
 
 # import csv
+
+
+
+from src.extract import Extract
+from src.transform import Transform
+from src.mySQL_connection import mySQL_connection
+
 
 
 
@@ -369,7 +363,7 @@ def exploder(df, df_name):
 
 
 def main():
-    raw_files           = Extract(files=1).getFiles()
+    raw_files           = Extract(folder_name="test_data").getFiles()
     # # unpacked_files  = Transform(raw_files).unpack_by_loop()
 
     file_transformer    = Transform()
