@@ -30,26 +30,6 @@ class Transform:
         return combined_df
 
 
-    # Might have trouble scaling this if:
-    # -- the number of files is massive
-    # -- the content of one or more files is massive
-    def unpack_by_map(self, files, normalise_on_column="entry", workerCount=10):
-        with Pool(workerCount) as p:
-            dfs = p.map(self._file_unpacker, files)
-
-        dfs = pd.concat(list(dfs))
-        dfs = dfs.reset_index(drop=True)
-
-        return dfs
-
-
-    def _file_unpacker(self, file):
-        data    = pd.read_json(file)
-        df      = pd.json_normalize(data['entry'], max_level=20)
-
-        return df
-        
-
     def seperate_by_uniqueness_loop(self, df, column):
         unique_items    = df[column].unique()
         unique_count    = len(unique_items)
@@ -70,6 +50,26 @@ class Transform:
         output_dict = dict(zip(unique_items, df_list))
 
         return output_dict
+
+
+    # Might have trouble scaling this if:
+    # -- the number of files is massive
+    # -- the content of one or more files is massive
+    def unpack_by_map(self, files, normalise_on_column="entry", workerCount=10):
+        with Pool(workerCount) as p:
+            dfs = p.map(self._file_unpacker, files)
+
+        dfs = pd.concat(list(dfs))
+        dfs = dfs.reset_index(drop=True)
+
+        return dfs
+
+
+    def _file_unpacker(self, file):
+        data    = pd.read_json(file)
+        df      = pd.json_normalize(data['entry'], max_level=20)
+
+        return df
 
 
     # PASSING THE WHOLE ITERABLE EACH TIME IS TOO SLOW
@@ -95,24 +95,9 @@ class Transform:
         return df
 
 
-    # it's dumb that we go json->df->json->df
+    # it's dumb that we go json->df->dict->df
     def flatten_df(self, df):
         data    = df.to_dict('records')
         df      = pd.DataFrame([flatten(d, ".") for d in data])
 
         return df
-
-
-    def new_unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
-        file_count  = len(files)
-        list_of_dfs = [0]*file_count 
-
-        for index, file in enumerate(files):
-            data    = pd.read_json(file)
-            df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
-            list_of_dfs[index] = df
-
-        combined_df = pd.concat(list_of_dfs)
-        combined_df = combined_df.reset_index()
-
-        return combined_df
