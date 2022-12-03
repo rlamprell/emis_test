@@ -15,8 +15,7 @@ from flatten_json import flatten
 class Transform:
     __slots__ = ('files')
 
-    def __init__(self):#, files):
-        # self.files = files
+    def __init__(self):
         pass
 
     def unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
@@ -50,8 +49,6 @@ class Transform:
     def _file_unpacker(self, file):
         data    = pd.read_json(file)
         df      = pd.json_normalize(data['entry'], max_level=20)
-        # df = pd.DataFrame([flatten_json(x) for x in data["entry"]])
-        # flatten_json.flatten_json()
 
         return df
         
@@ -64,22 +61,16 @@ class Transform:
         incr_row_count  = 0
 
         for index, item in enumerate(unique_items):
-            # df_list = df[['ItemId', 'ItemDescription']].drop_duplicates().set_index('ItemId')
             item_filter     = df[column]==item
             df_list[index]  = df.where(item_filter, inplace=False)
-            # print(df_list[index])
             df_list[index]  = df_list[index].dropna(how='all')
             df_list[index]  = df_list[index].dropna(axis=1)
-            # print(df_list[index])
             incr_row_count += len(df_list[index].index)
         
-        # print(row_count)
-        # print(incr_row_count)
         if row_count!=incr_row_count:
             print("data integrity issue")
 
         output_dict = dict(zip(unique_items, df_list))
-        # print(output_dict)
 
         return output_dict
 
@@ -89,13 +80,10 @@ class Transform:
     def seperate_by_uniqueness_map(self, df, column, workerCount=20):
         unique_items    = df[column].unique()
         unique_count    = len(unique_items)
-        # df_list         = [0]*unique_count
         row_count       = len(df.index)
 
         with Pool(workerCount) as p:
             df_list = p.starmap(self._df_seperator, zip(unique_items, repeat(column), repeat(df)))
-
-        # NEED A DI CHECK HERE
 
         output_dict = dict(zip(unique_items, df_list))
         
@@ -107,28 +95,16 @@ class Transform:
         df          = df.where(item_filter, inplace=False)
         df          = df.dropna(how='all')
         df          = df.dropna(axis=1)
-        # df          = self._flatten_df(df)
 
         return df
 
 
     # it's dumb that we go json->df->json->df
     def flatten_df(self, df):
-        print(df.columns.tolist())
-        data = df.to_dict('records')
-        # df = pd.DataFrame([flatten(data)])
-        df = pd.DataFrame([flatten(d, ".") for d in data])
-        print(df.columns.tolist())
-        # print(data)
-        # stop
+        data    = df.to_dict('records')
+        df      = pd.DataFrame([flatten(d, ".") for d in data])
 
-        # # print(f"mydata: {data}")
-        # df = pd.DataFrame([flatten_json(data)])    
-
-        # df = pd.DataFrame([flatten_json(x) for x in data])
-        # # df = pd.DataFrame([flatten_json(data[key]) for key in data])
         return df
-        # return     
 
 
     def new_unpack_by_loop(self, files, normalise_on_column="entry", max_recurrsion_depth=20):
@@ -145,8 +121,8 @@ class Transform:
 
         return combined_df
 
-    # @classmethod
-    def exploder(self, df, df_name):
+
+    def explode_nested_arrays(self, df, df_name):
         df = df
         if df_name=='Patient':
             df = df.explode('resource.extension')
