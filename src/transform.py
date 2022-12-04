@@ -18,7 +18,7 @@ class Transform:
         list_of_dfs = [0]*file_count 
 
         for index, file in enumerate(files):
-            data    = pd.read_json(file)
+            data    = pd.read_json(file, encoding="utf-8")
             df      = pd.json_normalize(data[normalise_on_column], max_level=max_recurrsion_depth)
             list_of_dfs[index] = df
 
@@ -61,7 +61,7 @@ class Transform:
 
 
     def _file_unpacker(self, file: str)->pd.core.frame.DataFrame:
-        data    = pd.read_json(file)
+        data    = pd.read_json(file, encoding="utf-8")
         df      = pd.json_normalize(data['entry'], max_level=20)
 
         return df
@@ -104,4 +104,10 @@ class Transform:
             if field_exists_in_df:
                 df = df.explode(this_field)
         
+        return df
+
+    
+    def remove_ascii_chars(self, df, column_name):
+        df[column_name] = df[column_name].str.encode('ascii', 'ignore').str.decode('utf8')
+
         return df
