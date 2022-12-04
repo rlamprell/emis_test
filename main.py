@@ -11,18 +11,16 @@ def main():
     seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
 
     for df in seperated_files:
-        current_df = seperated_files[df]
+        current_df       = seperated_files[df]
         fields_to_remove = [
             'resource.extension',
             'resource.identifier',
             'resource.address',
             'resource.name',
-            'resource.identifier',
-            'resource.name',
             'resource.item',
             'resource.category',
             'resource.target']
-            
+
         current_df = file_transformer.explode_nested_arrays(current_df, df, fields_to_remove)
         current_df = file_transformer.flatten_df(current_df)
         current_df = current_df.drop_duplicates()

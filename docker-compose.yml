@@ -1,0 +1,6 @@
+services:
+  python:
+    build: .
+    ports:
+      - "5000:5001"
+    command: python3 ./python_file.py

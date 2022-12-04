@@ -3,7 +3,7 @@ from    sqlalchemy.dialects     import mysql
 from    sqlalchemy              import select, insert
 from    dataclasses             import dataclass
 from    abc                     import ABC, abstractmethod
-from    .mysql                  import db_connection_config
+from    .configs                import db_connection_config
 
 
 
@@ -122,12 +122,12 @@ class db_connection(db_connection):
 
 
     def _connectionString(self):
-        db_container = self.config.get('container')
-        db_user = self.config.get('user')
-        db_pwd = self.config.get('password')
-        db_host = self.config.get('host')
-        db_port = self.config.get('port')
-        db_name = self.config.get('database')
+        db_container   = self.config.get('container')
+        db_user        = self.config.get('user')
+        db_pwd         = self.config.get('password')
+        db_host        = self.config.get('host')
+        db_port        = self.config.get('port')
+        db_name        = self.config.get('database')
         connection_str = f'{db_container}+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
         return connection_str
 
