@@ -4,3 +4,6 @@ import flatten_json
 # print(flatten_json.__version__)
 import sqlalchemy
 print(sqlalchemy.__version__)
+
+import pymysql
+print(pymysql.__version__)
