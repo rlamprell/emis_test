@@ -73,7 +73,7 @@
 
 
 
-<h2 align="left">Next Steps</h2>
+<h2 align="left">Next Steps & Alternative Apparoches</h2>
 <ul>
     <li>Some data-modeling around the tables would be good.  Some of the field names are bit abstract, long and not very informative.  Normalisation of the tables using Kimball or something similar might be beneficial to both the aforementioned issue and the overall readbility and flexibility of the data.</li> 
     <li>Further testing and a more robust test library would make changes easier.</li>
