@@ -3,7 +3,6 @@ from    multiprocessing import Pool, freeze_support
 from    dataclasses import dataclass
 from    functools import partial
 from    itertools import repeat
-# from    flatten_json import flatten_json
 from    flatten_json import flatten
 
 
