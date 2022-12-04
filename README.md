@@ -66,7 +66,7 @@
 </ul>
 <p align="left">
     
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-main-dataflow.PNG?raw=true)
 
     
 </p>
