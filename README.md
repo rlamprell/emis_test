@@ -67,7 +67,7 @@
 <p align="left">
     
 ![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-main-dataflow.PNG?raw=true)
-
+![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-docker-diagram.PNG?raw=true)
     
 </p>
 
