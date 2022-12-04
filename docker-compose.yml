@@ -15,7 +15,7 @@ services:
     expose:
       - '3306'
     volumes:
-      - mysql_db_vol_1:/var/lib/mysql
+      - mysql_db_vol:/var/lib/mysql
     networks:
       pipeline_network:
         ipv4_address: 10.5.0.5
@@ -33,7 +33,7 @@ services:
 
 
 volumes:
-  mysql_db_vol_1:
+  mysql_db_vol:
 
 
 networks:
