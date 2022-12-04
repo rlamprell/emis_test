@@ -47,7 +47,7 @@
         
         USE emis_test_db;
         SHOW TABLES;
-        select * from Patient;</li>
+        select * from Patient;
 </ul>
 
 
