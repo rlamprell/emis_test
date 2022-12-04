@@ -9,7 +9,6 @@ def main():
     file_transformer    = Transform()
     unpacked_files      = file_transformer.unpack_by_map(raw_files)
     seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')
-
     connection          = mysql_conn(mySQL_connection_details())
 
     for df in seperated_files:
