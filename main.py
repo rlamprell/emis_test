@@ -2,7 +2,7 @@ from src.extract                                    import Extract
 from src.transform                                  import Transform
 from src.db_connections.db_connection               import mysql_conn
 from src.db_connections.configs.mysql               import mySQL_connection_details
-#    src\db_connections\configs\db_connection_config.py
+
 
 def main():
     raw_files           = Extract(folder_name="data_test").getFiles()

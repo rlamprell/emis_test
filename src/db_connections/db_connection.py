@@ -1,11 +1,8 @@
 import  sqlalchemy              as db
-# from    sqlalchemy.dialects     import mysql
 from    sqlalchemy              import select, insert
 from    dataclasses             import dataclass
 from    abc                     import ABC, abstractmethod
 from    .configs                import db_connection_config
-
-
 
 
 class db_connection(ABC):

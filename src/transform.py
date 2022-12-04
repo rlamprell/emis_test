@@ -7,7 +7,6 @@ from    flatten_json import flatten
 
 
 
-# transform the files
 class Transform:
     __slots__ = ('files')
 
@@ -51,9 +50,6 @@ class Transform:
         return output_dict
 
 
-    # Might have trouble scaling this if:
-    # -- the number of files is massive
-    # -- the content of one or more files is massive
     def unpack_by_map(self, files: list, normalise_on_column: str="entry", workerCount: int=10)->list:
         with Pool(workerCount) as p:
             dfs = p.map(self._file_unpacker, files)

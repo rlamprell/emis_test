@@ -1,7 +1,7 @@
 import glob
 import os
 
-# import the files
+
 class Extract:
     __slots__ = ('folder_name', 'files')
 
