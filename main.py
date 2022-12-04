@@ -5,7 +5,7 @@ from src.db_connections.configs.mysql               import mySQL_connection_deta
 
 
 def main():
-    raw_files           = Extract(folder_name="data_test").getFiles()
+    raw_files           = Extract(folder_name="data").getFiles()
     file_transformer    = Transform()
     unpacked_files      = file_transformer.unpack_by_map(raw_files)
     seperated_files     = file_transformer.seperate_by_uniqueness_map(unpacked_files, 'resource.resourceType')

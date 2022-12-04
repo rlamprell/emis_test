@@ -38,7 +38,7 @@ class mysql_conn(db_connection):
         db_port        = self.config.get('port')
         db_name        = self.config.get('database')
         connection_str = f'{db_container}+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
-        print(connection_str)
+
         return connection_str
 
 
@@ -147,10 +147,3 @@ class db_connection(db_connection):
         engine = db.create_engine(self._connectionString)
         with engine.connect() as connection:
             df.to_sql(table_name, connection, if_exists='replace', index=False)
-
-
-
-
-if __name__ == "__main__":
-    connection = mysql_conn(mySQL_connection_details())
-    print(connection.executeGet('Patient'))
