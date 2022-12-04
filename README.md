@@ -53,6 +53,12 @@
 
 
 <h2 align="left">Architecture</h2>
+
+
+![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-docker-diagram.PNG?raw=true)
+![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-main-dataflow.PNG?raw=true)
+
+
 <h3 align="left">Assumptions</h3>
 <ul>
     <li>The files are local and will be batch loaded instead of streamed</li>
@@ -66,8 +72,7 @@
 </ul>
 <p align="left">
     
-![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-main-dataflow.PNG?raw=true)
-![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-docker-diagram.PNG?raw=true)
+
     
 </p>
 
