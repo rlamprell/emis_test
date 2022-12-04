@@ -65,7 +65,7 @@
     <li>Use Postgres instead of MySQL.  The latter doesn't properly support UTF-8 which has lead to hotfix at the 11th hour.</li>
     <li>Remove the dependency to feed the explode_nested_arrays() method an arbitrary list of names.</li>
     <li>Expand the db_connection methods and make them more general.</li>
-    <li>Resolve aborted connection bug when transferring tables</li>
+    <li>Resolve aborted connection bug when transferring tables - doesn't affect the data exported, might be a docker config issue.</li>
     <li>Some data-modeling around the tables would be good.  Some of the field names are bit abstract, long and not very informative.  Normalisation of the tables using Kimball or something similar might be beneficial to both the aforementioned issue and the overall readbility and flexibility of the data.</li> 
     <li>Further testing and a more robust test library would make changes easier.  Write Unit and integration tests.</li>
     <li>Change of approach on the file extraction.  If the number of files is too large or there's a particuarlly large file in the batch there's a potential for the pipeline to fallover due to memory issues.  Perhaps it should be more peacemeal with a checkpointing system.  .</li>

@@ -3,11 +3,6 @@ from src.transform                                  import Transform
 from src.db_connections.db_connection               import mysql_conn
 from src.db_connections.configs.mysql               import mySQL_connection_details
 
-import csv
-
-def validate():
-    pass
-
 
 def main():
     raw_files           = Extract(folder_name="data").getFiles()
@@ -38,18 +33,16 @@ def main():
 
         connection.executePost(table_name=df_name, df=current_df)
         
-        # get count on dataframe
-        # get count on executeGet(df_name)
-        # compare the two
-        #
-        # df_count = len(current_df.index)
-        # mysql_count = connection.executeGet(df_name, "count(*)")
-        # status = False
-        # all_rows_exported = df_count==mysql_count
-        # if all_rows_exported:
-        #     status = True
-        # print(f"Finished Exporting: {df_name}, Success: {status}, df_row_count: {df_count}, mysql_row_count: {mysql_count}")
-        print(f"Finished Exporting: {df_name}")
+        df_count            = len(current_df.index)
+        mysql_count         = connection.executeGet(df_name, "*")
+        mysql_count         = len(mysql_count)
+        status              = False
+        all_rows_exported   = df_count==mysql_count
+        if all_rows_exported:
+            status = True
+        print(f"Finished Exporting: {df_name}, Success: {status}, df_row_count: {df_count}, mysql_row_count: {mysql_count}")
+
+
 
 
 if __name__ == '__main__':
