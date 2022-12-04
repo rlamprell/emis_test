@@ -50,13 +50,17 @@
         select * from Patient;
 </ul>
 
+<h3 align="left">Expected Output</h3>
+
+![alt text](https://github.com/rlamprell/emis_test/blob/main/images/emis-test-expected-output.PNG?raw=true)
+
 
 
 <h2 align="left">Architecture</h2>
 
 
-![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-docker-diagram.PNG?raw=true)
-![alt text](https://github.com/rlamprell/emis_test/blob/main/emis-test-main-dataflow.PNG?raw=true)
+![alt text](https://github.com/rlamprell/emis_test/blob/main/images/emis-test-docker-diagram.PNG?raw=true)
+![alt text](https://github.com/rlamprell/emis_test/blob/main/images/emis-test-main-dataflow.PNG?raw=true)
 
 
 
