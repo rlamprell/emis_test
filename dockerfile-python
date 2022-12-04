@@ -10,3 +10,6 @@ COPY python_file.py ./
 COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
+
+# keep the container up
+ENTRYPOINT [ "tail", "-f", "/dev/null" ]

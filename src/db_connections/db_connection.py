@@ -1,5 +1,5 @@
 import  sqlalchemy              as db
-from    sqlalchemy.dialects     import mysql
+# from    sqlalchemy.dialects     import mysql
 from    sqlalchemy              import select, insert
 from    dataclasses             import dataclass
 from    abc                     import ABC, abstractmethod
@@ -41,6 +41,7 @@ class mysql_conn(db_connection):
         db_port        = self.config.get('port')
         db_name        = self.config.get('database')
         connection_str = f'{db_container}+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}'
+        print(connection_str)
         return connection_str
 
 

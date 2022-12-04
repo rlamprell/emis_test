@@ -1,26 +1,42 @@
 version: '3.3'
 
 services:
-  python:
-    build: .
-    ports:
-      - "5000:5001"
-    command: python3 ./python_file.py
-
   mysql_db:
     image: mysql:5.7
+    container_name: mysql
     restart: always
     environment:
-      MYSQL_DATABASE: 'db'
+      MYSQL_DATABASE: 'emis_test_db'
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
     ports:
-      - '3308:3308'
+      - '3306:3306'
     expose:
-      - '3308'
+      - '3306'
+    networks:
+      network:
+        ipv4_address: 10.5.0.5
     volumes:
       - mysql_db_vol:/var/lib/mysql
 
+  python:
+    container_name: python_pipline
+    build: 
+      context: ./
+      dockerfile: dockerfile-python
+    ports:
+      - "5000:5001"
+    command: python3 ./python_file.py
+
+
 volumes:
   mysql_db_vol:
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
