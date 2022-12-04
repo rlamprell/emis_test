@@ -3,7 +3,7 @@
 <h2 align="left">Project Description</h2>
 <p align="left">
     This is a solution to the EMIS-group DE test found here: https://github.com/emisgroup/exa-data-eng-assessment.
-    The solution is simple and uses Python to create a pipeline for unpacking json files and transferring them into a tabular format within a MySQL database.   Both of these are held within Docker containers.  
+    The solution uses Python to create a pipeline for unpacking json files and transferring them into a tabular format within a MySQL database.   Both of these are held within Docker containers.  
 </p>
 
 
