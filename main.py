@@ -41,7 +41,9 @@ def main():
         all_rows_exported   = df_count==mysql_count
         if all_rows_exported:
             status = True
-        print(f"Finished Exporting: {df_name}, Success: {status}, df_row_count: {df_count}, mysql_row_count: {mysql_count}")
+        print(f"Finished Exporting: {df_name}") 
+        print(f"    Success: {status}")
+        print(f"        df_row_count: {df_count}, mysql_row_count: {mysql_count}")
 
 
 
