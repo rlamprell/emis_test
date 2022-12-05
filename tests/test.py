@@ -70,5 +70,37 @@ class TestTransformMethods(unittest.TestCase):
 
 
 
+class TestDbConnectionsMethods(unittest.TestCase):
+
+    def test_connection_successful(self):
+        pass
+
+
+    def test_post_successful(self):
+        pass
+
+
+    def test_get_successful(self):
+        pass
+
+
+
+
+class TestIntegration(unittest.TestCase):
+
+    def test_single_load_works(self):
+        pass
+
+    
+    def test_partial_multi_load_works(self):
+        pass
+
+
+    def test_full_load_works(self):
+        pass
+
+
+
+
 if __name__ == '__main__':
     unittest.main() 
