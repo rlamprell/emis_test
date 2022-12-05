@@ -1,9 +1,11 @@
 import  pandas as pd
+import  re
 from    multiprocessing import Pool, freeze_support
 from    dataclasses import dataclass
 from    functools import partial
 from    itertools import repeat
 from    flatten_json import flatten
+
 
 
 
@@ -107,7 +109,14 @@ class Transform:
         return df
 
     
-    def remove_ascii_chars(self, df, column_name):
+    # this is faster than the regex but will probably lead to data issues
+    def remove_ascii_chars(self, df, column_name: str)->pd.core.frame.DataFrame:
         df[column_name] = df[column_name].str.encode('ascii', 'ignore').str.decode('utf8')
+
+        return df
+
+
+    def regex_column(self, df, column_name: str, remove_chars: str, for_chars: str)->pd.core.frame.DataFrame:
+        df[column_name] =  [re.sub(f'{remove_chars}',f'{for_chars}', str(x)) for x in df[column_name]]
 
         return df
