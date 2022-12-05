@@ -1,4 +1,4 @@
-<h1 align="left">Solution to 'exa-data-eng-assessment'.</h1>
+<h1 align="left">Solution to 'exa-data-eng-assessment'</h1>
 
 <h2 align="left">Project Description</h2>
 <p align="left">
