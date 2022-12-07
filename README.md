@@ -82,7 +82,7 @@
 <h2 align="left">Notes</h2>
 <ul>
     <li>Built on Windows 10.</li>
-    <li>Will run on M1 macs, as there is no  mysql:5.7 image for armx64.</li> 
+    <li>Will run not on M1 macs, as there is no  mysql:5.7 image for armx64.</li> 
 </ul>
 
 
