@@ -64,7 +64,7 @@
 
 
 
-<h2 align="left">Next Steps & Alternative Apparoches</h2>
+<h2 align="left">Next Steps & Alternative Approaches</h2>
 <ul>
     <li>Use Postgres instead of MySQL.  The latter doesn't properly support UTF-8 which has lead to hotfix at the 11th hour.</li>
     <li>Remove the dependency to feed the explode_nested_arrays() method an arbitrary list of names.</li>
