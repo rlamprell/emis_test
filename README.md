@@ -66,7 +66,7 @@
 
 <h2 align="left">Next Steps & Alternative Approaches</h2>
 <ul>
-    <li>Use Postgres instead of MySQL.  The latter doesn't properly support UTF-8 which has lead to hotfix at the 11th hour.</li>
+    <li>Use Postgres instead of MySQL.  The latter doesn't properly support UTF-8 which has led to hotfix at the 11th hour.</li>
     <li>Remove the dependency to feed the explode_nested_arrays() method an arbitrary list of names.</li>
     <li>Expand the db_connection methods and make them more general.</li>
     <li>Resolve aborted connection bug when transferring tables - doesn't affect the data exported, might be a docker config issue.</li>
