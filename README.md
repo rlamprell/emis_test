@@ -88,7 +88,7 @@
 
 <h3 align="left">Languages and Tools:</h3>
 <p align="left"> 
-    <a href="https://www.tensorflow.org" target="_blank" rel="noreferrer"> 
+    <a target="_blank" rel="noreferrer"> 
         <img src="https://skillicons.dev/icons?i=python,mysql,docker,git" />
     </a> 
 </p>
